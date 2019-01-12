@@ -1,8 +1,11 @@
-PORT           ?= /dev/ttyUSB0
-CHIP           ?= eps32
-FIRMWARE       ?= esp32-20190109-v1.9.4-773-gafecc124e.bin
-SRC_FILES := $(wildcard *.py)
-OBJ_FILES := $(patsubst %.py,%.pyc,$(SRC_FILES))
+PORT              ?= /dev/ttyUSB0
+CHIP              ?= esp8266
+CHIP_ESP8266       = esp8266
+CHIP_ESP32         = esp32
+FIRMWARE_ESP8266   = esp8266-20180511-v1.9.4.bin
+FIRMWARE_ESP32     = esp32-20190112-v1.9.4-779-g5064df207.bin
+SRC_FILES         := $(wildcard *.py)
+OBJ_FILES         := $(patsubst %.py,%.pyc,$(SRC_FILES))
 
 
 help:                     ## printing out the help
@@ -33,8 +36,11 @@ erase_flash:              ## erasing the flash on device
 
 
 flash:                    ## flashing the device with firmware
-#	esptool.py --chip $(CHIP) -p $(PORT) write_flash -z 0x1000 firmware/$(FIRMWARE)
-	esptool.py -p $(PORT) --baud 460800 write_flash --flash_size=detect 0 firmware/$(FIRMWARE)
+ifeq ($(CHIP),$(CHIP_ESP8266))
+	esptool.py -p $(PORT) --baud 460800 write_flash --flash_size=detect 0 firmware/$(FIRMWARE_ESP8266)
+else
+	esptool.py --chip $(CHIP) -p $(PORT) write_flash -z 0x1000 firmware/$(FIRMWARE_ESP32)
+endif
 
 
 monitor:                  ## monitor the devices using serial

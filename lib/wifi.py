@@ -7,14 +7,6 @@ import ubinascii
 # global constants
 #
 
-# WIFI_SSID   = '404 Network unavailable IoT'
-WIFI_SSID     = 'Stratum0'
-# WIFI_PASS   = 'deinIOTdeviceGeht99mal'
-WIFI_PASS     = 'stehtinderinfoecke'
-MY_MAC        = '10aea47b9790'
-MY_HOST       = 'esp32-webserver'
-
-
 
 
 #

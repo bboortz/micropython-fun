@@ -37,6 +37,17 @@ source .venv/bin/activate
 ```
 
 
+### Flashing Device
+
+
+#### ESP8266
+
+```
+make erase_flash CHIP=esp8266
+make flash CHIP=esp8266
+```
+
+
 ### Building and pushing software
 
 For example to build and push the sensor project:
