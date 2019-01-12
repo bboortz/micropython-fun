@@ -64,3 +64,7 @@ class Wifi:
 	def set_hostname(self, host):
 		logger.print_cmd('Set Hostname to {}'.format(host))
 		self.__nic.config(dhcp_hostname=host)
+
+	def scan_ssids(self):
+		self.__nic.active(True)
+		return self.__nic.scan()

@@ -10,6 +10,7 @@ Some simple micropython projects I build just for fun. Tested on this hardware
 
 * [Sensor](sensor/) - temperature and humidity sensor
 * [WebServer](webserver/) - simple webserver
+* [Wifi Scsn](wifi_scan/) - simple wifi scanner
 
 
 
