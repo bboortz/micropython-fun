@@ -17,18 +17,35 @@ def on_connect(client, userdata, flags, rc):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
 	print(msg.payload)
-	if msg.payload == b'A':
-		call(["xdotool", "key", "space"])
-	elif msg.payload == b'B':
-		call(["xdotool", "key", "Return"])
-	elif msg.payload == b'L':
-		call(["xdotool", "key", "Left"])
-	elif msg.payload == b'R':
-		call(["xdotool", "key", "Right"])
-	elif msg.payload == b'U':
-		call(["xdotool", "key", "Up"])
-	elif msg.payload == b'D':
-		call(["xdotool", "key", "Down"])
+	if msg.payload == b'A-press':
+		call(["xdotool", "keydown", "space"])
+	elif msg.payload == b'A-release':
+		call(["xdotool", "keyup", "space"])
+
+	elif msg.payload == b'B-press':
+		call(["xdotool", "keydown", "Alt"])
+	elif msg.payload == b'B-release':
+		call(["xdotool", "keyup", "Alt"])
+
+	elif msg.payload == b'L-press':
+		call(["xdotool", "keydown", "Left"])
+	elif msg.payload == b'L-release':
+		call(["xdotool", "keyup", "Left"])
+
+	elif msg.payload == b'R-press':
+		call(["xdotool", "keydown", "Right"])
+	elif msg.payload == b'R-release':
+		call(["xdotool", "keyup", "Right"])
+
+	elif msg.payload == b'U-press':
+		call(["xdotool", "keydown", "Up"])
+	elif msg.payload == b'U-release':
+		call(["xdotool", "keyup", "Up"])
+
+	elif msg.payload == b'D-press':
+		call(["xdotool", "keydown", "Down"])
+	elif msg.payload == b'D-release':
+		call(["xdotool", "keyup", "Down"])
 
 client = mqtt.Client()
 client.on_connect = on_connect

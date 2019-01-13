@@ -78,7 +78,20 @@ def setup_mqtt():
 	return m
 
 
-def measure(mqtt, buttonA, buttonB, buttonL, buttonR, buttonU, buttonD):
+def check_button(mqtt, button, buttonName, pressed):
+	m = button.value()
+
+	if not m  and  not pressed[buttonName]:
+		pressed[buttonName] = True
+		msg = buttonName + "-press"
+		mqtt.publish(MQTT_TOPIC, msg)
+	elif m  and  pressed[buttonName]:
+		pressed[buttonName] = False
+		msg = buttonName + "-release"
+		mqtt.publish(MQTT_TOPIC, msg)
+
+
+def measure(mqtt, pressed, buttonA, buttonB, buttonL, buttonR, buttonU, buttonD):
 	msg = 0
 	mA = buttonA.value()
 	mB = buttonB.value()
@@ -89,21 +102,12 @@ def measure(mqtt, buttonA, buttonB, buttonL, buttonR, buttonU, buttonD):
 
 	print(mA, mB, mL, mR, mU, mD)
 
-	if not mA:
-		msg = "A"
-	elif not mB:
-		msg = "B"
-	elif not mL:
-		msg = "L"
-	elif not mR:
-		msg = "R"
-	elif not mU:
-		msg = "U"
-	elif not mD:
-		msg = "D"
-
-	if msg != 0:
-		mqtt.publish(MQTT_TOPIC, msg)
+	check_button(mqtt, buttonA, 'A', pressed)
+	check_button(mqtt, buttonB, 'B', pressed)
+	check_button(mqtt, buttonL, 'L', pressed)
+	check_button(mqtt, buttonR, 'R', pressed)
+	check_button(mqtt, buttonU, 'U', pressed)
+	check_button(mqtt, buttonD, 'D', pressed)
 
 
 
@@ -114,6 +118,15 @@ def measure(mqtt, buttonA, buttonB, buttonL, buttonR, buttonU, buttonD):
 def main():
 	w = None
 	m = None
+
+	pressed =	{
+		"A": False,
+		"B": False,
+		"L": False,
+		"R": False,
+		"U": False,
+		"D": False,
+	}
 
 
 	# loop to setup the board
@@ -131,7 +144,7 @@ def main():
 
 	# loop for the controller
 	while True:
-		measure(m, buttonA, buttonB, buttonL, buttonR, buttonU, buttonD)
+		measure(m, pressed, buttonA, buttonB, buttonL, buttonR, buttonU, buttonD)
 		time.sleep(0.01)
 
 	# cleanup
