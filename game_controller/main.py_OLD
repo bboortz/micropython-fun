@@ -1,0 +1,121 @@
+import time
+from machine import Pin
+import logger
+from wifi import Wifi
+from mqtt import Mqtt
+from secrets import WIFI_SSID, WIFI_PASS
+
+
+
+# 
+# global constants
+#
+
+BUTTON1_PIN       = 23
+BUTTON2_PIN       = 22
+BUTTON3_PIN       = 19
+
+MY_NAME           = 'game-controller'
+MY_MAC            = '10aea47b9790'
+MY_HOST           = 'esp-sensor-' + MY_NAME 
+
+MQTT_BROKER       = "192.168.2.12"
+MQTT_CLIENT_NAME  = MY_HOST 
+MQTT_TOPIC        = 'game/' + MY_NAME + '/control'
+
+
+
+#
+# functions
+#
+
+def setup_board():
+	print('\n\n')
+	print('--------------------- SETUP BOARD ---------------------')
+	time.sleep(1)
+	logger.board_info()
+	logger.disable_debug()
+
+	# setup pins
+	button1 = Pin(BUTTON1_PIN, Pin.IN, Pin.PULL_UP)
+	button2 = Pin(BUTTON2_PIN, Pin.IN, Pin.PULL_UP)
+	button3 = Pin(BUTTON3_PIN, Pin.IN, Pin.PULL_UP)
+
+	return button1, button2, button3
+
+
+def setup_wifi():
+	try:
+		w = Wifi()
+		w.set_hostname(MY_HOST)
+		w.connect(WIFI_SSID, WIFI_PASS)
+		w.info()
+	except OSError as ose:
+		logger.print_error("WIFI Setup Failed!")
+		raise
+
+	return w
+
+
+def setup_mqtt():
+	try:
+		m = Mqtt(MQTT_CLIENT_NAME, MQTT_BROKER)
+		m.connect()
+	except OSError as ose:
+		logger.print_error("MQTT Setup Failed!")
+		raise
+
+	return m
+
+
+def measure(mqtt, button1, button2, button3):
+	msg = 0
+	m1 = button1.value()
+	m2 = button2.value()
+	m3 = button3.value()
+
+	print(m1, m2, m3)
+
+	if not m1:
+		msg = 1
+	elif not m2:
+		msg = 2
+	elif not m3:
+		msg = 3
+
+	if msg != 0:
+		mqtt.publish(MQTT_TOPIC, str(msg))
+
+
+
+#
+# program
+#
+
+def main():
+	w = None
+	m = None
+
+
+	# loop to setup the board
+	while True:
+		try:
+			button1, button2, button3 = setup_board()
+			w = setup_wifi()
+			m = setup_mqtt()
+			break
+		except OSError as ose:
+			print("Setup failed:", ose)
+
+
+	# loop for the controller
+	while True:
+		measure(m, button1, button2, button3)
+		time.sleep(0.01)
+
+	# cleanup
+	m.disconnect()
+	w.disconnect()
+
+
+main()
