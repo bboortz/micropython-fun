@@ -44,3 +44,17 @@ class Mqtt:
 	def publish(self, topic, msg):
 		logger.print_cmd('Publish data vi MQTT')
 		self.__c.publish(topic, msg)
+
+
+	def subscribe(self, topic, message_func):
+		logger.print_cmd('Subscribe data vi MQTT')
+		self.__c.set_callback(message_func)
+		self.__c.subscribe(topic)
+
+
+	def wait_msg(self):
+		try:
+			while 1:
+				self.__c.wait_msg()
+		finally:
+			self.__c.disconnect()
