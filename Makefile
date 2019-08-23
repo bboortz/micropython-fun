@@ -2,8 +2,8 @@ PORT              ?= /dev/ttyUSB0
 CHIP              ?= esp8266
 CHIP_ESP8266       = esp8266
 CHIP_ESP32         = esp32
-FIRMWARE_ESP8266   = esp8266-20180511-v1.9.4.bin
-FIRMWARE_ESP32     = esp32-20190112-v1.9.4-779-g5064df207.bin
+FIRMWARE_ESP8266   = esp8266-20190529-v1.11.bin
+FIRMWARE_ESP32     = esp32-20190822-v1.11-240-g519746cae.bin
 SRC_FILES         := $(wildcard *.py)
 OBJ_FILES         := $(patsubst %.py,%.pyc,$(SRC_FILES))
 
@@ -24,7 +24,8 @@ bootstrap:                ## bootstrapping the virtualenv
 	wget https://raw.githubusercontent.com/micropython/micropython-lib/master/umqtt.simple/umqtt/simple.py -O lib/umqtt/simple.py
 	mkdir -p firmware
 	wget http://micropython.org/resources/firmware/esp8266-20180511-v1.9.4.bin -O firmware/esp8266-20180511-v1.9.4.bin
-	wget http://micropython.org/resources/firmware/esp32-20190112-v1.9.4-779-g5064df207.bin -O firmware/esp32-20190112-v1.9.4-779-g5064df207.bin
+	wget http://micropython.org/resources/firmware/esp8266-20190529-v1.11.bin -O firmware/esp8266-20190529-v1.11.bin
+	wget http://micropython.org/resources/firmware/esp32-20190822-v1.11-240-g519746cae.bin -O firmware/esp32-20190822-v1.11-240-g519746cae.bin
 
 
 cleanup:                  ## cleaning up the virtualenv
