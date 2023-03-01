@@ -1,6 +1,6 @@
 import time
 import dht
-from machine import Pin
+from machine import Pin, ADC
 import ujson as json
 import logger
 from wifi import Wifi
@@ -24,6 +24,7 @@ MQTT_BROKER       = "192.168.1.3"
 MQTT_CLIENT_NAME  = MY_HOST 
 MQTT_TOPIC_TEMP   = 'sensornet/' + MY_LOCATION + '/vorlauf-temp'
 MQTT_TOPIC_HUMI   = 'sensornet/' + MY_LOCATION + '/vorlauf-humi'
+MQTT_TOPIC_VOLT   = 'sensornet/' + MY_LOCATION + '/vorlauf-volt'
 
 PUBLISH_INTERVAL  = 5
 
@@ -43,8 +44,9 @@ def setup_board():
 	# setup pins
 	sensor = dht.DHT11(Pin(SENSOR_PIN))
 	led = Pin(LED_PIN, Pin.OUT)
+	voltpin = ADC(0)
 
-	return sensor, led
+	return sensor, led, voltpin
 
 
 def setup_wifi():
@@ -71,7 +73,7 @@ def setup_mqtt():
 	return m
 
 
-def measure(mqtt, dht):
+def measure_temp(mqtt, dht):
 #	try:
 	dht.measure()
 			
@@ -81,13 +83,31 @@ def measure(mqtt, dht):
 	print("   Humidity: %3.2f %% RH" % humi)
 
 	json_data = {
-		"location": "lala",
+		"location": MY_LOCATION,
 		"temperature": temp,
 		"humidity":humi 
 	}
 	json_str = json.dumps(json_data)
 	mqtt.publish(MQTT_TOPIC_TEMP, str(temp))
 	mqtt.publish(MQTT_TOPIC_HUMI, str(humi))
+#	except OSError as ose:
+#		print("Meeasurement failed:", ose)
+#		raise
+
+
+def measure_volt(mqtt, voltpin):
+#	try:
+	voltpin_value = voltpin.read()
+	volt = voltpin_value * 3.3 / 1024
+			
+	print("Volt: %f V" % volt)
+
+	json_data = {
+		"location": MY_LOCATION,
+		"volt":volt
+	}
+	json_str = json.dumps(json_data)
+	mqtt.publish(MQTT_TOPIC_VOLT, str(volt))
 #	except OSError as ose:
 #		print("Meeasurement failed:", ose)
 #		raise
@@ -102,11 +122,12 @@ def main():
 	w = None
 	m = None
 	led = None
+	voltpin = None
 
 	# loop to setup the board
 	while True:
 		try:
-			sensor, led = setup_board()
+			sensor, led, voltpin = setup_board()
 			w = setup_wifi()
 			m = setup_mqtt()
 			break
@@ -120,7 +141,8 @@ def main():
 		print('----------- MEASURE AND PUBLISH -----------')
 #		led.value(1)
 #		time.sleep(0.5)
-		measure(m, sensor)
+		measure_temp(m, sensor)
+		measure_volt(m, voltpin)
 #		print('led 0')
 #		led.value(0)
 #		print('sleep')
