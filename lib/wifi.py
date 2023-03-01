@@ -18,6 +18,7 @@ class Wifi:
 	def __init__(self):
 		self.__nic = network.WLAN(network.STA_IF)
 		self.__nic.active(True)
+		logger.print_info('NIC active: {}'.format(self.nic.active()))
 
 
 	def is_connected(self):
@@ -33,11 +34,15 @@ class Wifi:
 
 
 	def connect(self, ssid, password):
+		print(self.__nic.status())
 		if not self.is_connected():
 			logger.print_cmd('Connect to Wifi {}'.format(ssid))
 			self.__nic.connect(ssid, password)
 			while not self.__nic.isconnected():
 				time.sleep_ms(500)
+				logger.print_wait()
+				#print(self.__nic.ifconfig())
+
 
 
 	def disconnect(self):
