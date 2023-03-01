@@ -2,7 +2,8 @@ import logger
 import time
 import network
 import ubinascii
-from umqtt.simple import MQTTClient
+#from umqtt.simple import MQTTClient
+from umqtt.robust import MQTTClient
 
 
 
@@ -12,8 +13,8 @@ from umqtt.simple import MQTTClient
 
 class Mqtt:
 
-	def __init__(self, client_name, server):
-		self.__c = MQTTClient(client_name, server)
+	def __init__(self, client_name,server):
+		self.__c = MQTTClient(client_id=client_name, server=server, keepalive=5)
 		self.__connected = False
 
 
@@ -22,7 +23,7 @@ class Mqtt:
 			logger.print_cmd('Send MQTT ping')
 			self.__c.ping()
 			self.__connected = True
-			logger.print_info('Connected from MQTT Broker')
+			logger.print_info('Connected to MQTT Broker')
 		except:
 			self.disconnect(False)
 		return self.__connected
