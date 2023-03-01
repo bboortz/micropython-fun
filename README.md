@@ -20,6 +20,9 @@ Some simple micropython projects I build just for fun. Tested on this hardware
 The projects are using some python files from [lib](lib/) directory.
 
 
+## Firmware
+
+The used firmware will be downloaded from https://micropython.org/download/ and stored to the [firmware](firmware/) directory.
 
 ## Usage
 
