@@ -2,7 +2,8 @@
 
 Some simple micropython projects I build just for fun. Tested on this hardware
 * ESP8266
-* EPS34
+* EPS32
+* EPS32C3
 
 
 

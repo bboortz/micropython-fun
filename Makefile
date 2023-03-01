@@ -2,8 +2,10 @@ PORT              ?= /dev/ttyUSB0
 CHIP              ?= esp8266
 CHIP_ESP8266       = esp8266
 CHIP_ESP32         = esp32
+CHIP_ESP32C3       = esp32c3
 FIRMWARE_ESP8266   = esp8266-20220618-v1.19.1.bin
 FIRMWARE_ESP32     = esp32-20220618-v1.19.1.bin
+FIRMWARE_ESP32C3   = esp32c3-20220618-v1.19.1.bin
 SRC_FILES         := $(wildcard *.py)
 OBJ_FILES         := $(patsubst %.py,%.pyc,$(SRC_FILES))
 
@@ -28,6 +30,7 @@ bootstrap:                ## bootstrapping the virtualenv
 	wget https://micropython.org/resources/firmware/esp8266-20190529-v1.11.bin -O firmware/esp8266-20190529-v1.11.bin
 	wget https://micropython.org/resources/firmware/esp8266-20220618-v1.19.1.bin -O firmware/esp8266-20220618-v1.19.1.bin
 	wget https://micropython.org/resources/firmware/esp32-20220618-v1.19.1.bin -O firmware/esp32-20220618-v1.19.1.bin
+	wget https://micropython.org/resources/firmware/esp32c3-20220618-v1.19.1.bin -O firmware/esp32c3-20220618-v1.19.1.bin
 
 
 cleanup:                  ## cleaning up the virtualenv
@@ -35,14 +38,16 @@ cleanup:                  ## cleaning up the virtualenv
 
 
 erase_flash:              ## erasing the flash on device
-	esptool.py --chip $(CHIP) -p $(PORT) erase_flash
+	esptool.py --chip $(CHIP) --port $(PORT) erase_flash
 
 
 flash:                    ## flashing the device with firmware
 ifeq ($(CHIP),$(CHIP_ESP8266))
-	esptool.py -p $(PORT) --baud 460800 write_flash --flash_size=detect 0 firmware/$(FIRMWARE_ESP8266)
+	esptool.py --port $(PORT) --baud 460800 write_flash --flash_size=detect 0 firmware/$(FIRMWARE_ESP8266)
+else ifeq ($(CHIP),$(CHIP_ESP32))
+	esptool.py --chip $(CHIP) --port $(PORT) write_flash -z 0x1000 firmware/$(FIRMWARE_ESP32)
 else
-	esptool.py --chip $(CHIP) -p $(PORT) write_flash -z 0x1000 firmware/$(FIRMWARE_ESP32)
+	esptool.py --chip $(CHIP) --port $(PORT) write_flash -z 0x0 firmware/$(FIRMWARE_ESP32C3)
 endif
 
 
