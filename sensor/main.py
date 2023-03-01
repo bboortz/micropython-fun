@@ -16,14 +16,14 @@ from secrets import WIFI_SSID, WIFI_PASS
 SENSOR_PIN  = 2
 LED_PIN     = 14
 
-MY_LOCATION  = 'house-floor0'
+MY_LOCATION  = 'cellar-heating'
 MY_MAC       = '10aea47b9790'
 MY_HOST      = 'esp-sensor-' + MY_LOCATION
 
-MQTT_BROKER       = "192.168.1.2"
+MQTT_BROKER       = "192.168.1.3"
 MQTT_CLIENT_NAME  = MY_HOST 
-MQTT_TOPIC_TEMP   = 'sensornet/' + MY_LOCATION + '/temp'
-MQTT_TOPIC_HUMI   = 'sensornet/' + MY_LOCATION + '/humi'
+MQTT_TOPIC_TEMP   = 'sensornet/' + MY_LOCATION + '/vorlauf-temp'
+MQTT_TOPIC_HUMI   = 'sensornet/' + MY_LOCATION + '/vorlauf-humi'
 
 PUBLISH_INTERVAL  = 5
 
@@ -101,7 +101,7 @@ def measure(mqtt, dht):
 def main():
 	w = None
 	m = None
-
+	led = None
 
 	# loop to setup the board
 	while True:
