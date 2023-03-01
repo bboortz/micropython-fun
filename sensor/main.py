@@ -20,8 +20,7 @@ MY_LOCATION  = 'house-floor0'
 MY_MAC       = '10aea47b9790'
 MY_HOST      = 'esp-sensor-' + MY_LOCATION
 
-#MQTT_BROKER       = "192.168.2.12"
-MQTT_BROKER       = "192.168.43.163"
+MQTT_BROKER       = "192.168.1.2"
 MQTT_CLIENT_NAME  = MY_HOST 
 MQTT_TOPIC_TEMP   = 'sensornet/' + MY_LOCATION + '/temp'
 MQTT_TOPIC_HUMI   = 'sensornet/' + MY_LOCATION + '/humi'

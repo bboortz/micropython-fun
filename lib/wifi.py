@@ -18,7 +18,7 @@ class Wifi:
 	def __init__(self):
 		self.__nic = network.WLAN(network.STA_IF)
 		self.__nic.active(True)
-		logger.print_info('NIC active: {}'.format(self.nic.active()))
+		logger.print_info('NIC active: {}'.format(self.__nic.active()))
 
 
 	def is_connected(self):
