@@ -71,6 +71,10 @@ put: $(OBJ_FILES)         ## upload software
 	@echo "software uploaded"
 
 
+mosquitto:                ## start mosquitto server
+	mosquitto -c mosquitto/mosquitto.conf -v
+
+
 %.pyc: %.py
 	ampy -p /dev/ttyUSB0 -b 115200 put $< $<
 
