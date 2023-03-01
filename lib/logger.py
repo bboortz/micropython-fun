@@ -12,6 +12,9 @@ def print_info(msg):
 def print_error(msg):
 	print('-E', msg)
 
+def print_wait():
+	print('.', end='')
+
 
 def board_info():
 	import sys
