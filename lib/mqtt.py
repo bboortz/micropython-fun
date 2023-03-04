@@ -43,7 +43,8 @@ class Mqtt:
 
 
 	def publish(self, topic, msg):
-		logger.print_cmd('Publish data vi MQTT')
+		logger.print_cmd('Publish data via MQTT topic: {}'.format(topic))
+		self.__connected = False
 		self.__c.publish(topic, msg)
 
 
