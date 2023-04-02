@@ -3,9 +3,11 @@ CHIP              ?= esp8266
 CHIP_ESP8266       = esp8266
 CHIP_ESP32         = esp32
 CHIP_ESP32C3       = esp32c3
+CHIP_ESP32S2       = esp32s2
 FIRMWARE_ESP8266   = esp8266-20220618-v1.19.1.bin
 FIRMWARE_ESP32     = esp32-20220618-v1.19.1.bin
 FIRMWARE_ESP32C3   = esp32c3-20220618-v1.19.1.bin
+FIRMWARE_ESP32S2   = GENERIC_S2-20220618-v1.19.1.bin
 SRC_FILES         := $(wildcard *.py)
 OBJ_FILES         := $(patsubst %.py,%.pyc,$(SRC_FILES))
 
@@ -31,6 +33,7 @@ bootstrap:                ## bootstrapping the virtualenv
 	wget https://micropython.org/resources/firmware/esp8266-20220618-v1.19.1.bin -O firmware/esp8266-20220618-v1.19.1.bin
 	wget https://micropython.org/resources/firmware/esp32-20220618-v1.19.1.bin -O firmware/esp32-20220618-v1.19.1.bin
 	wget https://micropython.org/resources/firmware/esp32c3-20220618-v1.19.1.bin -O firmware/esp32c3-20220618-v1.19.1.bin
+	wget https://micropython.org/resources/firmware/GENERIC_S2-20220618-v1.19.1.bin -O firmware/GENERIC_S2-20220618-v1.19.1.bin
 
 
 cleanup:                  ## cleaning up the virtualenv
@@ -46,8 +49,13 @@ ifeq ($(CHIP),$(CHIP_ESP8266))
 	esptool.py --port $(PORT) --baud 460800 write_flash --flash_size=detect 0 firmware/$(FIRMWARE_ESP8266)
 else ifeq ($(CHIP),$(CHIP_ESP32))
 	esptool.py --chip $(CHIP) --port $(PORT) write_flash -z 0x1000 firmware/$(FIRMWARE_ESP32)
-else
+else ifeq ($(CHIP),$(CHIP_ESP32C3))
 	esptool.py --chip $(CHIP) --port $(PORT) write_flash -z 0x0 firmware/$(FIRMWARE_ESP32C3)
+else ifeq ($(CHIP),$(CHIP_ESP32S2))
+	esptool.py --chip $(CHIP) --port $(PORT) write_flash -z 0x1000 firmware/$(FIRMWARE_ESP32S2)
+else
+	echo "unknown chip!"
+	exit 1
 endif
 
 
