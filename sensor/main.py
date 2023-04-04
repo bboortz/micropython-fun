@@ -1,11 +1,18 @@
+from secrets import SECRETS
+from config import CONFIG
+from sensors import get_sensors
+import temp
+import neoled
+
 import time
-import dht
-from machine import Pin, ADC
 import ujson as json
 import logger
 from wifi import Wifi
 from mqtt import Mqtt
-from secrets import WIFI_SSID, WIFI_PASS
+from machine import Pin
+
+if CONFIG.get("ADC_SENSOR"):
+    from machine import ADC
 
 
 
@@ -13,22 +20,17 @@ from secrets import WIFI_SSID, WIFI_PASS
 # global constants
 #
 
-ADC_VORLAUF_PIN = 34
-ADC_RUECKLAUF_PIN = 35
-SENSOR_VORLAUF_DHT22_PIN  = 0 # anderes 4
-SENSOR_RUECKLAUF_DHT22_PIN  = 5 
-LED_PIN     = 14
+MY_LOCATION = CONFIG.get("MY_LOCATION")
+MY_MAC = CONFIG.get("MY_MAC")
+MY_HOST = CONFIG.get("MY_HOST")
+MY_STAGE = CONFIG.get("MY_STAGE")
 
-MY_LOCATION  = 'cellar-heating'
-MY_MAC       = '10aea47b9790'
-MY_HOST      = 'esp-sensor-' + MY_LOCATION
+MQTT_BROKER = CONFIG.get("MQTT_BROKER")
+MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
+MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
 
-MQTT_BROKER       = "192.168.1.3"
-MQTT_CLIENT_NAME  = MY_HOST 
-MQTT_TOPIC_VORLAUF        = 'sensornet/' + MY_LOCATION + '/vorlauf'
-MQTT_TOPIC_RUECKLAUF      = 'sensornet/' + MY_LOCATION + '/ruecklauf'
-
-PUBLISH_INTERVAL  = 5
+BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
+PUBLISH_INTERVAL_MS  = CONFIG.get("PUBLISH_INTERVAL_MS")
 
 
 
@@ -39,27 +41,25 @@ PUBLISH_INTERVAL  = 5
 def setup_board():
     print('\n\n')
     print('--------------------- SETUP BOARD ---------------------')
-    time.sleep(1)
+    time.sleep_ms(1000)
     logger.board_info()
     logger.disable_debug()
+    measurement_interval_ms = CONFIG.get("MEASUREMENT_INTERVAL_MS")
 
     # setup pins
-    dht_vorlauf = dht.DHT22(Pin(SENSOR_VORLAUF_DHT22_PIN))
-    dht_ruecklauf = dht.DHT22(Pin(SENSOR_RUECKLAUF_DHT22_PIN))
-    led = Pin(LED_PIN, Pin.OUT)
-    voltpin_vorlauf = ADC(Pin(ADC_VORLAUF_PIN))
-    voltpin_vorlauf.atten(ADC.ATTN_11DB)
-    voltpin_ruecklauf = ADC(Pin(ADC_RUECKLAUF_PIN))
-    voltpin_ruecklauf.atten(ADC.ATTN_11DB)
+    led_pin = CONFIG.get("LED_PIN")
+    led = Pin(led_pin, Pin.OUT)
+    led = neoled.NeoLed(led, 1)
+    sensors = get_sensors()
 
-    return dht_vorlauf, dht_ruecklauf, led, voltpin_vorlauf, voltpin_ruecklauf
+    return led, sensors
 
 
 def setup_wifi():
     try:
         w = Wifi()
         w.set_hostname(MY_HOST)
-        w.connect(WIFI_SSID, WIFI_PASS)
+        w.connect(SECRETS.get("WIFI_SSID"), SECRETS.get("WIFI_PASS"))
         w.info()
     except OSError as ose:
         logger.print_error("WIFI Setup Failed!")
@@ -79,45 +79,35 @@ def setup_mqtt():
     return m
 
 
-def measure_temp(mqtt, dht, topic_begin):
+def measure(mqtt, counter, sensors, topic):
     try:
-        dht.measure()
-            
-        temp = dht.temperature()
-        #humi = dht.humidity()
-        print("Temperature: %3.1f °C" % temp)
-        #print("   Humidity: %3.2f %% RH" % humi)
-
-        #json_data = {
-        #    "location": MY_LOCATION,
-        #    "temperature": temp,
-        #    "humidity":humi 
-        #}
-        #json_str = json.dumps(json_data)
-        mqtt.publish(topic_begin + "-temp", str(temp))
-        # mqtt.publish(topic_begin + "-humi", str(humi))
-    except OSError as ose:
-        print("Meeasurement failed:", ose)
-    #   raise
-
-
-def measure_volt(mqtt, voltpin, topic_begin):
-    try:
-        voltpin_value = voltpin.read()
-        volt = voltpin_value * 3.3 / 4095
-                
-        print("Volt: %f V" % volt)
-
-        json_data = {
+        ticks_s = time.time()
+        json_data = { 
+            "stage": MY_STAGE, 
             "location": MY_LOCATION,
-            "volt":volt
+            "device": MY_HOST,
+            "measure_count": counter, 
+            "ticks_s": ticks_s,
+#            "vorlauf_temp": temp_vorlauf_res,
+#            "ruecklauf_temp": temp_ruecklauf_res
         }
-        json_str = json.dumps(json_data)
-        mqtt.publish(topic_begin + "-volt", str(volt))
-    except OSError as ose:
-        print("Meeasurement failed:", ose)
-    #        raise
 
+        for s in sensors:
+            name = s.get("name")
+            sensor = s.get("sensor")
+            sensor_res = sensor.measure()
+            sensor.init_next_measure()
+            json_data.update({name: sensor_res})
+            print("Temperature: %3.3f °C" % sensor_res)
+
+        # counter = 0
+        json_str = json.dumps(json_data)
+        print(json_str)
+        mqtt.publish(topic, json_str)
+        # mqtt.publish(topic + "-temp", str(temp))
+        # mqtt.publish(topic_begin + "-humi", str(humi))
+    except Exception as e:
+        logger.print_error("Measurement failed!")
 
 
 #
@@ -133,28 +123,27 @@ def main():
     # loop to setup the board
     while True:
         try:
-            dht_vorlauf, dht_ruecklauf, led, voltpin_vorlauf, voltpin_ruecklauf = setup_board()
+            led, sensors = setup_board()
             w = setup_wifi()
             m = setup_mqtt()
             break
-        except OSError as ose:
-            print("Setup failed:", ose)
-    time.sleep(3)
+        except Exception as e:
+            logger.print_error("Setup failed!")
+
+    led.color((2, 2, 2))
+    time.sleep_ms(BOOT_WAIT_MS)
+    led.color((0, 0, 0))
 
     # loop for measuring and publishing data
 #    while board_ready and w.is_connected() and m.is_connected():
+    counter = 0
     while True:
         print('----------- MEASURE AND PUBLISH -----------')
-        measure_temp(m, dht_vorlauf, MQTT_TOPIC_VORLAUF)
-        measure_temp(m, dht_ruecklauf, MQTT_TOPIC_RUECKLAUF)
-        measure_volt(m, voltpin_vorlauf, MQTT_TOPIC_VORLAUF)
-        measure_volt(m, voltpin_ruecklauf, MQTT_TOPIC_RUECKLAUF)
-#        led.value(1)
-#        time.sleep(0.5)
-#        print('led 0')
-#        led.value(0)
-#        print('sleep')
-        time.sleep(PUBLISH_INTERVAL)
+        led.color((2, 2, 2))
+        measure(m, counter, sensors, MQTT_TOPIC)
+        led.color((0, 0, 0))
+        counter += 1
+        time.sleep_ms(PUBLISH_INTERVAL_MS)
 
     # cleanup
     m.disconnect()
@@ -164,15 +153,3 @@ def main():
 while True:
     main()
 
-
-# testcases
-# 
-# during startup
-# * wifi available / unavailable
-# * mqtt available / unavailable
-# * sensor available / unavailable
-#
-# during runtime
-# * wifi available / unavailable
-# * mqtt available / unavailable
-# * sensor available / unavailable
