@@ -4,12 +4,14 @@ from sensors import get_sensors
 import temp
 import neoled
 
+import sys
 import time
 import ujson as json
 import logger
 from wifi import Wifi
 from mqtt import Mqtt
 from machine import Pin
+from machine import soft_reset
 
 if CONFIG.get("ADC_SENSOR"):
     from machine import ADC
@@ -19,6 +21,8 @@ if CONFIG.get("ADC_SENSOR"):
 # 
 # global constants
 #
+
+MAX_COUNTER = sys.maxsize - 1000
 
 MY_LOCATION = CONFIG.get("MY_LOCATION")
 MY_MAC = CONFIG.get("MY_MAC")
@@ -59,6 +63,7 @@ def setup_wifi():
     try:
         w = Wifi()
         w.set_hostname(MY_HOST)
+        w.set_mac(MY_MAC)
         w.connect(SECRETS.get("WIFI_SSID"), SECRETS.get("WIFI_PASS"))
         w.info()
     except Exception as e:
@@ -143,16 +148,20 @@ def main():
 #    while board_ready and w.is_connected() and m.is_connected():
     counter = 0
     while True:
-        print('----------- MEASURE AND PUBLISH -----------')
+        if counter > MAX_COUNTER:
+            logger.print_info("initiazing soft reset because counter is reaching MAX_COUNTER")
+            soft_reset()
+
+        print("----------- MEASURE AND PUBLISH: %d -----------" % counter)
+        led.color((2, 2, 2))
+
         if len(sensors) == 0:
             logger.print_info("no sensors configured.")
         else:
-            led.color((2, 2, 2))
-            print(sensors)
             measure(m, counter, sensors, MQTT_TOPIC)
-            led.color((0, 0, 0))
-            counter += 1
 
+        led.color((0, 0, 0))
+        counter += 1
         time.sleep_ms(PUBLISH_INTERVAL_MS)
 
     # cleanup
@@ -161,5 +170,10 @@ def main():
 
 
 while True:
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.print_error("Failed in main() function!")
+        print(e)
+        soft_reset()
 

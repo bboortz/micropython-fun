@@ -1,15 +1,18 @@
 # 
 # config
 #
+from device import MACHINE_ID_QSUM
+
+
 MY_STAGE = "dev"
 MY_LOCATION = "living-room"
-MY_HOST = "esp-sensor-" + MY_LOCATION + "-" + MY_STAGE
+MY_HOST = "esp-sensor-" + MY_LOCATION + "-" + MY_STAGE + "-" + str( MACHINE_ID_QSUM )
 
 MY_STAGE_HEX = "{0:02x}".format(ord( MY_STAGE[0] ))
 MY_LOCATION_HEX = "{0:02x}".format(ord( MY_LOCATION[0] ))
 MY_HOST_LEN = str(len(MY_HOST))
-MY_MAC = "10aea4%s%s%s" % (MY_STAGE_HEX, MY_LOCATION_HEX, MY_HOST_LEN)
-print(MY_MAC)
+MY_MAC = "2222%s%s%s%s" % (MY_STAGE_HEX, MY_LOCATION_HEX, MY_HOST_LEN, MACHINE_ID_QSUM)
+
 
 CONFIG =	{
   # pins

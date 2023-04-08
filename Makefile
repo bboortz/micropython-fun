@@ -69,9 +69,13 @@ get:                      ## retrieve boot code
 
 put_libs:                 ## upload libraries
 	ampy -p /dev/ttyUSB0 -b 115200 mkdir --exists-okay lib
+	ampy -p /dev/ttyUSB0 -b 115200 put lib/device.py lib/device.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/logger.py lib/logger.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/wifi.py lib/wifi.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/mqtt.py lib/mqtt.py
+	ampy -p /dev/ttyUSB0 -b 115200 put lib/neoled.py lib/neoled.py
+	ampy -p /dev/ttyUSB0 -b 115200 put lib/sensors.py lib/sensors.py
+	ampy -p /dev/ttyUSB0 -b 115200 put lib/temp.py lib/temp.py
 	ampy -p /dev/ttyUSB0 -b 115200 mkdir --exists-okay lib/umqtt
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/umqtt/simple.py lib/umqtt/simple.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/umqtt/robust.py lib/umqtt/robust.py
