@@ -1,18 +1,13 @@
 from config import CONFIG
 
+import sys
 import time
 import logger
-from machine import Pin
 
-if CONFIG.get("DHT11_SENSOR"):
-    import dht
-elif CONFIG.get("DHT22_SENSOR"):
-    import dht
-elif CONFIG.get("DS18X20_SENSOR"):
-    import onewire, ds18x20
-else:
-    logger.print_error("Configuration broken! Cannot load imports!")
-    
+
+class SensorException(BaseException):
+    pass
+
 
 class TempSensor:
 
@@ -25,19 +20,35 @@ class TempSensor:
 
 
     def setup_sensor(self):
-        if self.sensor_type == "DHT11_SENSOR":
-            self.sensor = dht.DHT11(machine.Pin(self.pin))
-        elif self.sensor_type == "DHT22_SENSOR":
-            self.sensor = dht.DHT11(machine.Pin(self.pin))
-        elif self.sensor_type == "DS18X20_SENSOR":
-            ds = ds18x20.DS18X20(onewire.OneWire(self.pin))
-            roms = ds.scan()
-            self.rom = roms[0]
-            print('found DS18X20 devices:', roms)
-            ds.convert_temp()
-            self.sensor = ds
-        else:
-            logger.print_error("Wrong sensor_type!")
+        try:
+            if self.sensor_type == "DHT11_SENSOR":
+                import dht
+                self.sensor = dht.DHT11(self.pin)
+            elif self.sensor_type == "DHT22_SENSOR":
+                import dht
+                self.sensor = dht.DHT22(self.pin)
+            elif self.sensor_type == "DS18X20_SENSOR":
+                import onewire, ds18x20
+                ds = ds18x20.DS18X20(onewire.OneWire(self.pin))
+                roms = ds.scan()
+                try:
+                    self.rom = roms[0]
+                except Exception as e:
+                    logger.print_error("Sensor not found!")
+                    print(e)
+                    raise()
+
+                print('found DS18X20 devices:', roms)
+                ds.convert_temp()
+                self.sensor = ds
+            else:
+                logger.print_error("Wrong sensor_type!")
+                raise SensorException("Wrong sensor_type")
+
+        except Exception as e:
+            logger.print_error("Sensor not found!")
+            print(e)
+            raise()
 
 
     def measure(self):
@@ -53,7 +64,7 @@ class TempSensor:
             self.last_measure_time = time.ticks_ms()
             return self.last_measure_temp
         elif self.sensor_type == "DHT22_SENSOR":
-            self.measure()
+            self.sensor.measure()
             self.last_measure_temp = self.sensor.temperature()
             self.last_measure_time = time.ticks_ms()
             return self.last_measure_temp
@@ -63,6 +74,8 @@ class TempSensor:
             return self.last_measure_temp
         else:
             logger.print_error("Wrong sensor_type!")
+            raise SensorException("Wrong sensor_type")
+
 
     def init_next_measure(self):
         if self.sensor_type == "DHT11_SENSOR":
@@ -73,3 +86,4 @@ class TempSensor:
             self.sensor.convert_temp()
         else:
             logger.print_error("Wrong sensor_type!")
+            raise SensorException("Wrong sensor_type")

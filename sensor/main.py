@@ -61,9 +61,10 @@ def setup_wifi():
         w.set_hostname(MY_HOST)
         w.connect(SECRETS.get("WIFI_SSID"), SECRETS.get("WIFI_PASS"))
         w.info()
-    except OSError as ose:
+    except Exception as e:
         logger.print_error("WIFI Setup Failed!")
-        raise
+        print(e)
+        raise()
 
     return w
 
@@ -72,9 +73,10 @@ def setup_mqtt():
     try:
         m = Mqtt(MQTT_CLIENT_NAME, MQTT_BROKER)
         m.connect()
-    except OSError as ose:
+    except Exception as e:
         logger.print_error("MQTT Setup Failed!")
-        raise
+        print(e)
+        raise()
 
     return m
 
@@ -108,6 +110,7 @@ def measure(mqtt, counter, sensors, topic):
         # mqtt.publish(topic_begin + "-humi", str(humi))
     except Exception as e:
         logger.print_error("Measurement failed!")
+        print(e)
 
 
 #
@@ -129,6 +132,8 @@ def main():
             break
         except Exception as e:
             logger.print_error("Setup failed!")
+            print(e)
+            raise()
 
     led.color((2, 2, 2))
     time.sleep_ms(BOOT_WAIT_MS)
@@ -139,10 +144,15 @@ def main():
     counter = 0
     while True:
         print('----------- MEASURE AND PUBLISH -----------')
-        led.color((2, 2, 2))
-        measure(m, counter, sensors, MQTT_TOPIC)
-        led.color((0, 0, 0))
-        counter += 1
+        if len(sensors) == 0:
+            logger.print_info("no sensors configured.")
+        else:
+            led.color((2, 2, 2))
+            print(sensors)
+            measure(m, counter, sensors, MQTT_TOPIC)
+            led.color((0, 0, 0))
+            counter += 1
+
         time.sleep_ms(PUBLISH_INTERVAL_MS)
 
     # cleanup
