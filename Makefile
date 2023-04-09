@@ -71,6 +71,7 @@ put_libs:                 ## upload libraries
 	ampy -p /dev/ttyUSB0 -b 115200 mkdir --exists-okay lib
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/device.py lib/device.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/logger.py lib/logger.py
+	ampy -p /dev/ttyUSB0 -b 115200 put lib/events.py lib/events.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/wifi.py lib/wifi.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/mqtt.py lib/mqtt.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/neoled.py lib/neoled.py
