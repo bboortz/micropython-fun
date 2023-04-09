@@ -15,6 +15,9 @@ MY_MAC = "2222%s%s%s%s" % (MY_STAGE_HEX, MY_LOCATION_HEX, MY_HOST_LEN, MACHINE_I
 
 
 CONFIG =	{
+  # events
+  "EVENTS_FILE": "events.csv",
+
   # pins
   "LED_PIN": 18,
 
@@ -25,7 +28,7 @@ CONFIG =	{
   "MY_MAC": MY_MAC,
 
   # mqtt
-  "MQTT_BROKER": "mosquitto.pub-a.devara.world",
+  "MQTT_BROKER": "mosquitto.pub-a.devara.world1",
   "MQTT_CLIENT_NAME": MY_HOST,
   "MQTT_TOPIC": "sensornet/measurements",
 
