@@ -4,9 +4,9 @@
 from device import MACHINE_ID_QSUM
 
 
-MY_STAGE = "dev"
-MY_LOCATION = "living-room"
-MY_HOST = "esp-sensor-" + MY_LOCATION + "-" + MY_STAGE + "-" + str( MACHINE_ID_QSUM )
+MY_STAGE = "test"
+MY_LOCATION = "work-room"
+MY_HOST = "esp-sensor-" + MY_LOCATION + "-" + MY_STAGE + str( MACHINE_ID_QSUM )
 
 MY_STAGE_HEX = "{0:02x}".format(ord( MY_STAGE[0] ))
 MY_LOCATION_HEX = "{0:02x}".format(ord( MY_LOCATION[0] ))
@@ -28,7 +28,7 @@ CONFIG =	{
   "MY_MAC": MY_MAC,
 
   # mqtt
-  "MQTT_BROKER": "mosquitto.pub-a.devara.world1",
+  "MQTT_BROKER": "mosquitto.pub-a.devara.world",
   "MQTT_CLIENT_NAME": MY_HOST,
   "MQTT_TOPIC": "sensornet/measurements",
 
@@ -40,16 +40,16 @@ CONFIG =	{
 
   "SENSORS":
   [
-#      {
-#          "sensor_name": "heizkoerper_vorlauf_temp",
-#          "sensor_type": "DS18X20_SENSOR",
-#          "sensor_pin": 45
-#      },
-#      {
-#          "sensor_name": "raum_temp",
-#          "sensor_type": "DHT22_SENSOR",
-#          "sensor_pin": 42
-#      }
+      {
+          "sensor_name": "heizkoerper_vorlauf_temp",
+          "sensor_type": "DS18X20_SENSOR",
+          "sensor_pin": 45
+      },
+      {
+          "sensor_name": "raum_temp",
+          "sensor_type": "DHT22_SENSOR",
+          "sensor_pin": 42
+      }
   ]
 }
 

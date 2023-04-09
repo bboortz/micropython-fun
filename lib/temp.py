@@ -20,6 +20,8 @@ class TempSensor:
 
 
     def setup_sensor(self):
+        logger.print_cmd("setting up sensor: (%s, %s)" % (self.sensor_type, self.pin) )
+
         try:
             if self.sensor_type == "DHT11_SENSOR":
                 import dht
@@ -36,9 +38,9 @@ class TempSensor:
                 except Exception as e:
                     logger.print_error("Sensor not found!")
                     print(e)
-                    raise()
+                    raise(e)
 
-                print('found DS18X20 devices:', roms)
+                logger.print_info("found DS18X20 devices: %s" % roms)
                 ds.convert_temp()
                 self.sensor = ds
             else:
@@ -47,8 +49,7 @@ class TempSensor:
 
         except Exception as e:
             logger.print_error("Sensor not found!")
-            print(e)
-            raise()
+            raise(e)
 
 
     def measure(self):

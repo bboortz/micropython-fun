@@ -23,7 +23,11 @@ if CONFIG.get("ADC_SENSOR"):
 #
 
 MAX_SETUP_ATTEMPTS = 10
+MAX_ERRORS = 10
 MAX_COUNTER = sys.maxsize - 1000
+COUNTER = 0
+ERR_COUNTER = 0
+
 EVENTS_FILE = CONFIG.get("EVENTS_FILE")
 
 MY_LOCATION = CONFIG.get("MY_LOCATION")
@@ -39,7 +43,6 @@ BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
 PUBLISH_INTERVAL_MS  = CONFIG.get("PUBLISH_INTERVAL_MS")
 
 EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST)
-COUNTER = 0
 
 
 
@@ -68,7 +71,6 @@ def setup_wifi():
     try:
         w = Wifi()
         w.set_hostname(MY_HOST)
-        MY_MAC = "2222646c2935"
         w.set_mac(MY_MAC)
         w.connect(SECRETS.get("WIFI_SSID"), SECRETS.get("WIFI_PASS"))
         w.info()
@@ -91,6 +93,8 @@ def setup_mqtt():
 
 
 def measure(mqtt, counter, sensors, topic):
+    global ERR_COUNTER
+
     try:
         ticks_s = time.time()
         json_data = { 
@@ -118,6 +122,10 @@ def measure(mqtt, counter, sensors, topic):
         # mqtt.publish(topic_begin + "-humi", str(humi))
     except Exception as e:
         EVENTS.event("error", "Measurement failed: %s" % getattr(e, 'message', repr(e)) )
+        ERR_COUNTER += 1
+        if ERR_COUNTER > MAX_ERRORS:
+            EVENTS.event("error", "initiating soft reset because ERR_COUNTER is reaching MAX_ERRORS.")
+            EVENTS.soft_reset()
 
 
 #
@@ -125,11 +133,12 @@ def measure(mqtt, counter, sensors, topic):
 #
 
 def main():
+    global COUNTER
+    global ERR_COUNTER
     w = None
     m = None
     led = None
     voltpin = None
-    COUNTER = 0
     EVENTS.event("info", "initializing boot ...", COUNTER)
 
     # loop to setup the board

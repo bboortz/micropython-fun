@@ -28,6 +28,8 @@ class Events:
         # log to stdout
         if etype == "info":
             logger.print_info(event)
+        elif etype == "cmd":
+            logger.print_info(event)
         else:
             logger.print_error(event)
 
@@ -49,4 +51,5 @@ class Events:
         f.close()
 
     def soft_reset(self):
+        self.event("cmd", "soft reset")
         sreset()
