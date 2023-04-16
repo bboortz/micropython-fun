@@ -74,6 +74,7 @@ put_libs:                 ## upload libraries
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/events.py lib/events.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/wifi.py lib/wifi.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/mqtt.py lib/mqtt.py
+	ampy -p /dev/ttyUSB0 -b 115200 put lib/ntptime.py lib/ntptime.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/neoled.py lib/neoled.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/sensors.py lib/sensors.py
 	ampy -p /dev/ttyUSB0 -b 115200 put lib/temp.py lib/temp.py

@@ -5,6 +5,7 @@ import time
 import json
 import logger
 from machine import soft_reset as sreset
+from machine import reset as hreset
 
 
 class EventsException(BaseException):
@@ -33,6 +34,9 @@ class Events:
         else:
             logger.print_error(event)
 
+        datetime = str(time.localtime())
+        ticks_s = int(time.ticks_ms() / 1000)
+
         json_data = {
             "type": etype,
             "stage": self.stage,
@@ -40,7 +44,8 @@ class Events:
             "device": self.device,
             "event": event,
             "measure_count": counter,
-            "ticks_s": 0,
+            "datetime": datetime,
+            "ticks_s": ticks_s,
         }
 
         # log to file
@@ -53,3 +58,7 @@ class Events:
     def soft_reset(self):
         self.event("cmd", "soft reset")
         sreset()
+
+    def hard_reset(self):
+        self.event("cmd", "hard reset")
+        hreset()

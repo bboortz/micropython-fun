@@ -12,6 +12,7 @@ import logger
 from wifi import Wifi
 from mqtt import Mqtt
 from machine import Pin
+from machine import WDT
 
 if CONFIG.get("ADC_SENSOR"):
     from machine import ADC
@@ -41,6 +42,7 @@ MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
 
 BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
 PUBLISH_INTERVAL_MS  = CONFIG.get("PUBLISH_INTERVAL_MS")
+WDT_TIMEOUT = PUBLISH_INTERVAL_MS + 1000
 
 EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST)
 
@@ -92,16 +94,28 @@ def setup_mqtt():
     return m
 
 
+def setup_ntptime():
+    import ntptime
+
+    logger.print_info("Local time before synchronization：%s" %str(time.localtime()))
+    ntptime.settime()
+    logger.print_info("Local time after synchronization：%s" %str(time.localtime()))
+
+
 def measure(mqtt, counter, sensors, topic):
     global ERR_COUNTER
 
     try:
-        ticks_s = time.time()
+        t = time.localtime()
+        datetime = "%4d-%02d-%02dT%02d:%02d:%02d.000Z" % (t[0], t[1], t[2], t[3], t[4], t[5])
+        ticks_s = int(time.ticks_ms() / 1000)
+
         json_data = { 
             "stage": MY_STAGE, 
             "location": MY_LOCATION,
             "device": MY_HOST,
             "measure_count": counter, 
+            "datetime": datetime,
             "ticks_s": ticks_s,
 #            "vorlauf_temp": temp_vorlauf_res,
 #            "ruecklauf_temp": temp_ruecklauf_res
@@ -135,6 +149,8 @@ def measure(mqtt, counter, sensors, topic):
 def main():
     global COUNTER
     global ERR_COUNTER
+    global MAX_SETUP_ATTEMPTS
+    global BOOT_WAIT_MS
     w = None
     m = None
     led = None
@@ -145,13 +161,14 @@ def main():
     while True:
         COUNTER += 1
         if COUNTER > MAX_SETUP_ATTEMPTS:
-            EVENTS.event("error", "setup has failed MAX_SETUP_ATTEMPTS(%d) times. soft reset..." % MAX_SETUP_ATTEMPTS)
-            EVENTS.soft_reset()
+            EVENTS.event("error", "setup has failed MAX_SETUP_ATTEMPTS(%d) times. hard reset..." % MAX_SETUP_ATTEMPTS)
+            EVENTS.hard_reset()
 
         try:
             led, sensors = setup_board()
             w = setup_wifi()
             m = setup_mqtt()
+            setup_ntptime()
             break
         except Exception as e:
             EVENTS.event("error", "setup failed", COUNTER)
@@ -159,12 +176,15 @@ def main():
             time.sleep_ms(BOOT_WAIT_MS * 2)
 
 
+    wdt = WDT(timeout = WDT_TIMEOUT)
+    EVENTS.event("info", "WDT initiated", COUNTER)
     COUNTER = 0
     EVENTS.set_mqtt = m
     EVENTS.event("info", "setup done", COUNTER)
     led.color((2, 2, 2))
     time.sleep_ms(BOOT_WAIT_MS)
     led.color((0, 0, 0))
+    wdt.feed()
 
     # loop for measuring and publishing data
     while True:
@@ -182,7 +202,9 @@ def main():
 
         led.color((0, 0, 0))
         COUNTER += 1
+        wdt.feed()
         time.sleep_ms(PUBLISH_INTERVAL_MS)
+        wdt.feed()
 
     # cleanup
     m.disconnect()
