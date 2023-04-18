@@ -6,7 +6,7 @@ import ubinascii
 # 
 # global constants
 #
-MAX_RETIRES = 30
+MAX_RETIRES = 20
 
 
 #
@@ -20,8 +20,7 @@ class Wifi:
 
     def __init__(self):
         self.__nic = network.WLAN(network.STA_IF)
-        self.__nic.active(True)
-        logger.print_info('NIC active: {}'.format(self.__nic.active()))
+        self.deactivate()
 
 
     def is_connected(self):
@@ -46,7 +45,7 @@ class Wifi:
                 retries +=1
                 if retries > MAX_RETIRES:
                     raise WifiException("The wifi connect retries has exceeded the MAX_RETIRES(%d)" % retries)
-                time.sleep_ms(500)
+                time.sleep_ms(1000)
                 logger.print_wait()
                 #print(self.__nic.ifconfig())
 
@@ -79,3 +78,13 @@ class Wifi:
 
     def scan_ssids(self):
         return self.__nic.scan()
+
+    def activate(self):
+        self.__nic.active(True)
+        logger.print_info('NIC activated: {}'.format(self.__nic.active()))
+        time.sleep_ms(1000)
+
+    def deactivate(self):
+        self.__nic.active(False)
+        logger.print_info('NIC activated: {}'.format(self.__nic.active()))
+        time.sleep_ms(1000)

@@ -51,6 +51,7 @@ class Events:
         # log to file
         json_str = json.dumps(json_data)
         f = open(self.filename, 'a')
+        f.write('\n')
         f.write(json_str)
         f.write('\n')
         f.close()

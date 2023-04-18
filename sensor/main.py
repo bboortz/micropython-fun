@@ -10,6 +10,7 @@ import time
 import ujson as json
 import logger
 from wifi import Wifi
+from wifi import WifiException
 from mqtt import Mqtt
 from machine import Pin
 from machine import WDT
@@ -23,7 +24,7 @@ if CONFIG.get("ADC_SENSOR"):
 # global constants
 #
 
-MAX_SETUP_ATTEMPTS = 10
+MAX_SETUP_ATTEMPTS = 2
 MAX_ERRORS = 10
 MAX_COUNTER = sys.maxsize - 1000
 COUNTER = 0
@@ -72,6 +73,7 @@ def setup_board():
 def setup_wifi():
     try:
         w = Wifi()
+        w.activate()
         w.set_hostname(MY_HOST)
         w.set_mac(MY_MAC)
         w.connect(SECRETS.get("WIFI_SSID"), SECRETS.get("WIFI_PASS"))
@@ -79,6 +81,11 @@ def setup_wifi():
     except Exception as e:
         EVENTS.event("error", "WIFI Setup Failed: %s" % getattr(e, 'message', repr(e)) )
         raise(e)
+    except WifiException as be:
+        EVENTS.event("error", "WIFI Setup Failed: %s. Deactivating interface." % getattr(be, 'message', repr(be)) )
+        sys.print_exception(be)
+        w.deactivate()
+        raise(be)
 
     return w
 
@@ -155,29 +162,42 @@ def main():
     m = None
     led = None
     voltpin = None
+    wdt = None
     EVENTS.event("info", "initializing boot ...", COUNTER)
 
     # loop to setup the board
     while True:
         COUNTER += 1
         if COUNTER > MAX_SETUP_ATTEMPTS:
-            EVENTS.event("error", "setup has failed MAX_SETUP_ATTEMPTS(%d) times. hard reset..." % MAX_SETUP_ATTEMPTS)
+            wait_ms = BOOT_WAIT_MS * COUNTER * COUNTER
+            EVENTS.event("error", "setup has failed MAX_SETUP_ATTEMPTS(%d) times. sleep %d milliseconds. hard reset..." % (MAX_SETUP_ATTEMPTS, wait_ms))
+            time.sleep_ms(wait_ms)
             EVENTS.hard_reset()
 
         try:
             led, sensors = setup_board()
             w = setup_wifi()
+            wdt = WDT(timeout = WDT_TIMEOUT)
+            EVENTS.event("info", "WDT initiated", COUNTER)
+            wdt.feed()
             m = setup_mqtt()
+            wdt.feed()
             setup_ntptime()
+            wdt.feed()
             break
+
+        except WifiException as be:
+            wait_ms = BOOT_WAIT_MS * COUNTER * COUNTER
+            EVENTS.event("error", "setup failed. sleep %d milliseconds. retry..." % wait_ms)
+            time.sleep_ms(wait_ms)
         except Exception as e:
             EVENTS.event("error", "setup failed", COUNTER)
             sys.print_exception(e)
-            time.sleep_ms(BOOT_WAIT_MS * 2)
+            wait_ms = BOOT_WAIT_MS * COUNTER * COUNTER
+            EVENTS.event("error", "setup failed. sleep %d milliseconds. retry..." % wait_ms)
+            time.sleep_ms(wait_ms)
 
 
-    wdt = WDT(timeout = WDT_TIMEOUT)
-    EVENTS.event("info", "WDT initiated", COUNTER)
     COUNTER = 0
     EVENTS.set_mqtt = m
     EVENTS.event("info", "setup done", COUNTER)
