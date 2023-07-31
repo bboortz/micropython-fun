@@ -14,16 +14,18 @@ class EventsException(BaseException):
 
 class Events:
 
-    def __init__(self, filename, stage, location, device, mqtt = None):
+    def __init__(self, filename, stage, location, device, topic = None, mqtt = None):
         self.filename = filename
         self.stage = stage
         self.location = location
         self.device = device
         self.mqtt = mqtt
+        self.topic = topic
 
 
-    def setup_mqtt(self, mqtt):
+    def set_mqtt(self, mqtt, counter = 0):
         self.mqtt = mqtt
+        self.event("info", "mqtt-publish for events initialized!", counter)
 
     def event(self, etype, event, counter = 0):
         # log to stdout
@@ -48,13 +50,17 @@ class Events:
             "ticks_s": ticks_s,
         }
 
-        # log to file
         json_str = json.dumps(json_data)
-        f = open(self.filename, 'a')
-        f.write('\n')
-        f.write(json_str)
-        f.write('\n')
-        f.close()
+        if self.mqtt != None:
+            # log to mqtt
+            self.mqtt.publish(self.topic, json_str)
+        else:
+            # log to file
+            f = open(self.filename, 'a')
+            f.write('\n')
+            f.write(json_str)
+            f.write('\n')
+            f.close()
 
     def soft_reset(self):
         self.event("cmd", "soft reset")
