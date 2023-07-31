@@ -21,7 +21,7 @@ help:                     ## printing out the help
 
 
 bootstrap:                ## bootstrapping the virtualenv
-	virtualenv .venv; \
+	python -m venv .venv; \
 	source .venv/bin/activate; \
 	pip install -U -r requirements.txt; \
 	mkdir -p lib/umqtt
