@@ -5,7 +5,7 @@ from device import MACHINE_ID_QSUM
 
 
 MY_STAGE = "test"
-MY_LOCATION = "work-room"
+MY_LOCATION = "cellar-heating"
 MY_HOST = "esp-sensor-" + MY_LOCATION + "-" + MY_STAGE + str( MACHINE_ID_QSUM )
 
 MY_STAGE_HEX = "{0:02x}".format(ord( MY_STAGE[0] ))
@@ -41,16 +41,20 @@ CONFIG =	{
   "SENSORS":
   [
       {
-          "sensor_name": "heizkoerper_vorlauf_temp",
+          "sensor_name": "vorlauf_temp",
           "sensor_type": "DS18X20_SENSOR",
           "sensor_pin": 45
       },
       {
-          "sensor_name": "raum_temp",
-          "sensor_type": "DHT22_SENSOR",
+          "sensor_name": "ruecklauf_temp",
+          "sensor_type": "DS18X20_SENSOR",
           "sensor_pin": 42
+      },
+      {
+          "sensor_name": "warmwasser_zirkulation_temp",
+          "sensor_type": "DS18X20_SENSOR",
+          "sensor_pin": 40
       }
   ]
 }
-
 

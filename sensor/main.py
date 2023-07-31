@@ -58,6 +58,8 @@ def setup_board():
     print("--------------------- SETUP BOARD: %d ---------------------" % COUNTER)
     time.sleep_ms(1000)
     logger.board_info()
+    print(CONFIG)
+    time.sleep_ms(1000)
     logger.disable_debug()
     measurement_interval_ms = CONFIG.get("MEASUREMENT_INTERVAL_MS")
 
