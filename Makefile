@@ -4,10 +4,10 @@ CHIP_ESP8266       = esp8266
 CHIP_ESP32         = esp32
 CHIP_ESP32C3       = esp32c3
 CHIP_ESP32S2       = esp32s2
-FIRMWARE_ESP8266   = esp8266-20220618-v1.19.1.bin
-FIRMWARE_ESP32     = esp32-20220618-v1.19.1.bin
-FIRMWARE_ESP32C3   = esp32c3-20220618-v1.19.1.bin
-FIRMWARE_ESP32S2   = GENERIC_S2-20220618-v1.19.1.bin
+FIRMWARE_ESP8266   = esp8266-20230426-v1.20.0.bin 
+FIRMWARE_ESP32     = esp32-20230426-v1.20.0.bin
+FIRMWARE_ESP32C3   = esp32c3-20230426-v1.20.0.bin
+FIRMWARE_ESP32S2   = GENERIC_S2-20230426-v1.20.0.bin
 SRC_FILES         := $(wildcard *.py)
 OBJ_FILES         := $(patsubst %.py,%.pyc,$(SRC_FILES))
 
@@ -31,9 +31,13 @@ bootstrap:                ## bootstrapping the virtualenv
 	wget https://micropython.org/resources/firmware/esp8266-20180511-v1.9.4.bin -O firmware/esp8266-20180511-v1.9.4.bin
 	wget https://micropython.org/resources/firmware/esp8266-20190529-v1.11.bin -O firmware/esp8266-20190529-v1.11.bin
 	wget https://micropython.org/resources/firmware/esp8266-20220618-v1.19.1.bin -O firmware/esp8266-20220618-v1.19.1.bin
+	wget https://micropython.org/resources/firmware/esp8266-20230426-v1.20.0.bin -O firmware/esp8266-20230426-v1.20.0.bin
 	wget https://micropython.org/resources/firmware/esp32-20220618-v1.19.1.bin -O firmware/esp32-20220618-v1.19.1.bin
+	wget https://micropython.org/resources/firmware/esp32-20230426-v1.20.0.bin -O firmware/esp32-20230426-v1.20.0.bin
 	wget https://micropython.org/resources/firmware/esp32c3-20220618-v1.19.1.bin -O firmware/esp32c3-20220618-v1.19.1.bin
+	wget https://micropython.org/resources/firmware/esp32c3-20230426-v1.20.0.bin -O firmware/esp32c3-20230426-v1.20.0.bin
 	wget https://micropython.org/resources/firmware/GENERIC_S2-20220618-v1.19.1.bin -O firmware/GENERIC_S2-20220618-v1.19.1.bin
+	wget https://micropython.org/resources/firmware/GENERIC_S2-20230426-v1.20.0.bin -O firmware/GENERIC_S2-20230426-v1.20.0.bin
 
 
 cleanup:                  ## cleaning up the virtualenv
