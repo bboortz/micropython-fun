@@ -1,14 +1,12 @@
 from events import Events
 from config import CONFIG
-from sensors import get_sensors
-import neoled
+from device import setup_device
 
 import sys
 import time
 import ujson as json
 import logger
 from machine import Pin
-from machine import WDT
 
 
 
@@ -44,25 +42,6 @@ EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
 #
 # functions
 #
-
-def setup_board():
-    print('\n\n')
-    print("--------------------- SETUP BOARD: %d ---------------------" % COUNTER)
-    time.sleep_ms(1000)
-    logger.board_info()
-    print(CONFIG)
-    time.sleep_ms(1000)
-    logger.disable_debug()
-
-    # setup pins
-    led_pin = CONFIG.get("LED_PIN")
-    led = Pin(led_pin, Pin.OUT)
-    led = neoled.NeoLed(led, 1)
-    sensors = get_sensors()
-
-    return led, sensors
-
-
 def measure(mqtt, counter, sensors, topic):
     global ERR_COUNTER
 
@@ -129,10 +108,7 @@ def main():
             EVENTS.hard_reset()
 
         try:
-            led, sensors = setup_board()
-            # wdt = WDT(timeout = WDT_TIMEOUT)
-            wdt = WDT()
-            EVENTS.event("info", "WDT initiated", COUNTER)
+            led, sensors, wdt = setup_device(COUNTER, CONFIG)
             wdt.feed()
             break
 
@@ -145,7 +121,7 @@ def main():
 
 
     COUNTER = 0
-    EVENTS.event("info", "setup done", COUNTER)
+    EVENTS.event("info", "device setup done", COUNTER)
     led.color((2, 2, 2))
     time.sleep_ms(BOOT_WAIT_MS)
     led.color((0, 0, 0))

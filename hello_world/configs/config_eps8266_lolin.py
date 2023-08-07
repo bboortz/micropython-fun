@@ -19,7 +19,7 @@ CONFIG =	{
   "EVENTS_FILE": "events.csv",
 
   # pins
-  "LED_PIN": 8,
+  "LED_PIN": 4,
 
   # location
   "MY_STAGE": MY_STAGE,
