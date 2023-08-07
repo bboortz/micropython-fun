@@ -1,7 +1,7 @@
 # 
 # config
 #
-from device import MACHINE_ID_QSUM
+from device_config import MACHINE_ID_QSUM
 
 
 MY_STAGE = "dev"
@@ -38,6 +38,7 @@ CONFIG =	{
   "MEASUREMENT_INTERVAL_MS": 5000,
   "PUBLISH_INTERVAL_MS": 5000,
   "PUBLISH_TIMEOUT_MS": 5000,
+  "WDT_TIMEOUT_MS": 6000,
 
   "SENSORS":
   [

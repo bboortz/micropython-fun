@@ -18,8 +18,9 @@ class WifiException(BaseException):
 
 class Wifi:
 
-    def __init__(self):
+    def __init__(self, wdt):
         self.__nic = network.WLAN(network.STA_IF)
+        self.__wdt = wdt
         self.deactivate()
 
 
@@ -42,6 +43,7 @@ class Wifi:
             logger.print_cmd('Connect to Wifi {}'.format(ssid))
             self.__nic.connect(ssid, password)
             while not self.__nic.isconnected():
+                self.__wdt.feed()
                 retries +=1
                 if retries > MAX_RETIRES:
                     raise WifiException("The wifi connect retries has exceeded the MAX_RETIRES(%d)" % retries)

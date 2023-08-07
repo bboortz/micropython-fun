@@ -1,9 +1,8 @@
 from events import Events
 from config import CONFIG
 from secrets import SECRETS
-from sensors import get_sensors
+from device import setup_device
 import temp
-import neoled
 
 import sys
 import time
@@ -12,11 +11,6 @@ import logger
 from wifi import Wifi
 from wifi import WifiException
 from mqtt import Mqtt
-from machine import Pin
-from machine import WDT
-
-if CONFIG.get("ADC_SENSOR"):
-    from machine import ADC
 
 
 
@@ -53,29 +47,9 @@ EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
 #
 # functions
 #
-
-def setup_board():
-    print('\n\n')
-    print("--------------------- SETUP BOARD: %d ---------------------" % COUNTER)
-    time.sleep_ms(1000)
-    logger.board_info()
-    print(CONFIG)
-    time.sleep_ms(1000)
-    logger.disable_debug()
-    measurement_interval_ms = CONFIG.get("MEASUREMENT_INTERVAL_MS")
-
-    # setup pins
-    led_pin = CONFIG.get("LED_PIN")
-    led = Pin(led_pin, Pin.OUT)
-    led = neoled.NeoLed(led, 1)
-    sensors = get_sensors()
-
-    return led, sensors
-
-
-def setup_wifi():
+def setup_wifi(wdt):
     try:
-        w = Wifi()
+        w = Wifi(wdt)
         w.activate()
         w.set_hostname(MY_HOST)
         w.set_mac(MY_MAC)
@@ -178,10 +152,9 @@ def main():
             EVENTS.hard_reset()
 
         try:
-            led, sensors = setup_board()
-            w = setup_wifi()
-            wdt = WDT(timeout = WDT_TIMEOUT)
-            EVENTS.event("info", "WDT initiated", COUNTER)
+            led, sensors, wdt = setup_device(COUNTER, CONFIG)
+            wdt.feed()
+            w = setup_wifi(wdt)
             wdt.feed()
             m = setup_mqtt()
             wdt.feed()
@@ -203,7 +176,7 @@ def main():
 
     COUNTER = 0
     EVENTS.set_mqtt(m, COUNTER)
-    EVENTS.event("info", "setup done", COUNTER)
+    EVENTS.event("info", "device setup done", COUNTER)
     led.color((2, 2, 2))
     time.sleep_ms(BOOT_WAIT_MS)
     led.color((0, 0, 0))
