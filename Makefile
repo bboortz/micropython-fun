@@ -47,6 +47,10 @@ cleanup:                  ## cleaning up the virtualenv
 	rm -rf .venv
 
 
+get_flash_info:             ## retrieve the flash information
+	esptool.py --chip $(CHIP) --port $(PORT) flash_id
+
+
 erase_flash:              ## erasing the flash on device
 	esptool.py --chip $(CHIP) --port $(PORT) erase_flash
 
