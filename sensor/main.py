@@ -1,7 +1,15 @@
+
+print('\n\n')
+print("--------------------- RUN PROGRAM ---------------------")
+
+
+
+#
+# import
+# 
 from events import Events
 from config import CONFIG
 from secrets import SECRETS
-from device import setup_device
 import temp
 
 import sys
@@ -17,30 +25,18 @@ from mqtt import Mqtt
 # 
 # global constants
 #
-
 MAX_SETUP_ATTEMPTS = 2
 MAX_ERRORS = 10
 MAX_COUNTER = sys.maxsize - 1000
 COUNTER = 0
 ERR_COUNTER = 0
 
-EVENTS_FILE = CONFIG.get("EVENTS_FILE")
-
-MY_LOCATION = CONFIG.get("MY_LOCATION")
-MY_MAC = CONFIG.get("MY_MAC")
-MY_HOST = CONFIG.get("MY_HOST")
-MY_STAGE = CONFIG.get("MY_STAGE")
-
 MQTT_BROKER = CONFIG.get("MQTT_BROKER")
 MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
 MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
-MQTT_TOPIC_EVENTS = CONFIG.get("MQTT_TOPIC_EVENTS")
 
-BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
 PUBLISH_INTERVAL_MS  = CONFIG.get("PUBLISH_INTERVAL_MS")
-WDT_TIMEOUT = PUBLISH_INTERVAL_MS + 1000
 
-EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
 
 
 
@@ -137,10 +133,7 @@ def main():
     global BOOT_WAIT_MS
     w = None
     m = None
-    led = None
-    voltpin = None
-    wdt = None
-    EVENTS.event("info", "initializing boot ...", COUNTER)
+    EVENTS.event("info", "program setup runnig ...", COUNTER)
 
     # loop to setup the board
     while True:
@@ -152,8 +145,8 @@ def main():
             EVENTS.hard_reset()
 
         try:
-            led, sensors, wdt = setup_device(COUNTER, CONFIG)
-            wdt.feed()
+            wait_ms = BOOT_WAIT_MS
+            time.sleep_ms(wait_ms)
             w = setup_wifi(wdt)
             wdt.feed()
             m = setup_mqtt()
@@ -176,10 +169,10 @@ def main():
 
     COUNTER = 0
     EVENTS.set_mqtt(m, COUNTER)
-    EVENTS.event("info", "device setup done", COUNTER)
-    led.color((2, 2, 2))
+    EVENTS.event("info", "program setup done", COUNTER)
+    led.on()
     time.sleep_ms(BOOT_WAIT_MS)
-    led.color((0, 0, 0))
+    led.off()
     wdt.feed()
 
     # loop for measuring and publishing data
@@ -189,14 +182,14 @@ def main():
             EVENTS.soft_reset()
 
         print("----------- MEASURE AND PUBLISH: %d -----------" % COUNTER)
-        led.color((2, 2, 2))
+        led.on()
 
         if len(sensors) == 0:
             logger.print_info("no sensors configured.")
         else:
             measure(m, COUNTER, sensors, MQTT_TOPIC)
 
-        led.color((0, 0, 0))
+        led.off()
         COUNTER += 1
         wdt.feed()
         time.sleep_ms(PUBLISH_INTERVAL_MS)
