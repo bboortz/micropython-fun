@@ -1,4 +1,6 @@
+import gc
 import time
+import status_led
 import logger
 from machine import Pin
 from watchdogtimer import WatchdogTimer
@@ -7,25 +9,49 @@ import neoled
 
 
 #
-# functions
+# class
 #
-def setup_device(counter, config):
-    print('\n\n')
-    print("--------------------- SETUP BOARD: %d ---------------------" % counter)
-    time.sleep_ms(1000)
-    logger.board_info()
-    print("*CONFIG*")
-    print(config)
-    logger.disable_debug()
+class DeviceException(BaseException):
+    pass
 
-    # setup pins
-    led_pin = config.get("LED_PIN")
-    led = Pin(led_pin, Pin.OUT)
-    led = neoled.NeoLed(led, 1)
-    sensors = get_sensors()
 
-    # setup watchdogtimer
-    wdt = WatchdogTimer(config.get("WDT_TIMEOUT_MS"))
+class Device:
 
-    return led, sensors, wdt
+    def __init__(self, counter, config):
+        self.__counter = counter
+        self.__config = config
+
+    def setup(self):
+        print('\n\n')
+        print("--------------------- SETUP BOARD: %d ---------------------" % self.__counter)
+        time.sleep_ms( self.__config.get("BOOT_WAIT_MS") )
+        logger.print_info("** BOARD INFO **")
+        logger.board_info()
+        logger.print_info("** CONFIG **")
+        print(self.__config)
+
+        # logging
+        logger.disable_debug()
+        logger.print_info('Logging for hardware debugging disabled!')
+
+        # configure garbage collector
+        gc.enable()
+        gc.collect()
+        logger.print_info('GC configured!')
+
+        # setup pins
+        led = status_led.StatusLed(self.__config)
+        led.on()
+        logger.print_info('Status LED configured!')
+
+        # sensors
+        sensors = get_sensors(self.__config)
+        logger.print_info('Sensors configured!')
+
+        # setup watchdogtimer
+        wdt = WatchdogTimer(self.__config.get("WDT_TIMEOUT_MS"))
+        logger.print_info('Watchdog Timer configured!')
+
+        led.off()
+        return led, sensors, wdt
 

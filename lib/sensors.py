@@ -1,4 +1,3 @@
-from config import CONFIG
 import temp
 
 import time
@@ -6,9 +5,9 @@ import logger
 from machine import Pin
 
 
-def get_sensors():
-    sensors_dict = CONFIG.get("SENSORS")
-    measurement_interval_ms = CONFIG.get("MEASUREMENT_INTERVAL_MS")
+def get_sensors(config):
+    sensors_dict = config.get("SENSORS")
+    measurement_interval_ms = config.get("MEASUREMENT_INTERVAL_MS")
     sensors = []
 
     for s in sensors_dict:  

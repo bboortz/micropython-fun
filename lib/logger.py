@@ -3,14 +3,14 @@
 #
 
 def print_cmd(msg):
-    print('->', msg, "...")
+    print('-> ', msg, "...")
 
 
 def print_info(msg):
-    print('-I', msg)
+    print('-I ', msg)
 
 def print_error(msg):
-    print('-E', msg)
+    print('-E ', msg)
 
 def print_wait():
     print('.', end='')

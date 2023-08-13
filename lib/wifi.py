@@ -37,7 +37,6 @@ class Wifi:
 
 
     def connect(self, ssid, password):
-        print(self.__nic.status())
         retries = 0
         if not self.is_connected():
             logger.print_cmd('Connect to Wifi {}'.format(ssid))
@@ -60,10 +59,10 @@ class Wifi:
 
     def info(self):
         if self.is_connected():
-            print('Wifi ESSID:', self.__nic.config('essid'))
-            print('Network config:', self.__nic.ifconfig())
+            logger.print_info('Wifi ESSID: {}'.format( self.__nic.config('essid') ))
+            logger.print_info('Network config: {}'.format( self.__nic.ifconfig() ))
             mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode()
-            print('Mac: {}'.format(mac))
+            logger.print_info('Mac: {}'.format(mac))
 
 
     def set_mac(self, mac):
@@ -76,7 +75,8 @@ class Wifi:
 
     def set_hostname(self, host):
         logger.print_cmd('Set Hostname to {}'.format(host))
-        self.__nic.config(dhcp_hostname=host)
+        network.hostname(host)
+#        self.__nic.config(dhcp_hostname=host) # old variant
 
     def scan_ssids(self):
         return self.__nic.scan()
