@@ -1,6 +1,14 @@
+
+print('\n\n')
+print("--------------------- RUN PROGRAM ---------------------")
+
+
+
+#
+# imports
+#
 from events import Events
 from config import CONFIG
-from device import setup_device
 
 import sys
 import time
@@ -13,29 +21,17 @@ from machine import Pin
 # 
 # global constants
 #
-
 MAX_SETUP_ATTEMPTS = 2
 MAX_ERRORS = 10
 MAX_COUNTER = sys.maxsize - 1000
 COUNTER = 0
 ERR_COUNTER = 0
 
-EVENTS_FILE = CONFIG.get("EVENTS_FILE")
-
-MY_LOCATION = CONFIG.get("MY_LOCATION")
-MY_MAC = CONFIG.get("MY_MAC")
-MY_HOST = CONFIG.get("MY_HOST")
-MY_STAGE = CONFIG.get("MY_STAGE")
-
 MQTT_BROKER = CONFIG.get("MQTT_BROKER")
 MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
 MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
-MQTT_TOPIC_EVENTS = CONFIG.get("MQTT_TOPIC_EVENTS")
 
-BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
 HELLO_INTERVAL_MS  = CONFIG.get("HELLO_INTERVAL_MS")
-
-EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
 
 
 
@@ -93,10 +89,7 @@ def main():
     global BOOT_WAIT_MS
     w = None
     m = None
-    led = None
-    voltpin = None
-    wdt = None
-    EVENTS.event("info", "initializing boot ...", COUNTER)
+    EVENTS.event("info", "program setup runnig ...", COUNTER)
 
     # loop to setup the board
     while True:
@@ -108,7 +101,6 @@ def main():
             EVENTS.hard_reset()
 
         try:
-            led, sensors, wdt = setup_device(COUNTER, CONFIG)
             wdt.feed()
             break
 
@@ -121,11 +113,12 @@ def main():
 
 
     COUNTER = 0
-    EVENTS.event("info", "device setup done", COUNTER)
-    led.color((2, 2, 2))
+    EVENTS.event("info", "program setup done", COUNTER)
+    led.on()
     time.sleep_ms(BOOT_WAIT_MS)
-    led.color((0, 0, 0))
+    led.off()
     wdt.feed()
+    EVENTS.event("info", "program setup really done", COUNTER)
 
     # loop for measuring and publishing data
     while True:
@@ -135,11 +128,13 @@ def main():
 
         print("----------- HELLO: %d -----------" % COUNTER)
         wdt.feed()
-        led.color((2, 2, 2))
+        led.on()
         time.sleep_ms(HELLO_INTERVAL_MS)
-        led.color((0, 0, 0))
-        COUNTER += 1
+
         wdt.feed()
+        led.off()
+        time.sleep_ms(HELLO_INTERVAL_MS)
+        COUNTER += 1
 
 
 while True:
