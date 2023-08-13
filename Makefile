@@ -1,4 +1,7 @@
 PORT              ?= /dev/ttyUSB0
+# BAUD_RATE         ?= 460800
+# BAUD_RATE         ?= 230400
+BAUD_RATE         ?= 115200
 CHIP              ?= esp8266
 CHIP_ESP8266       = esp8266
 CHIP_ESP32         = esp32
@@ -47,12 +50,16 @@ cleanup:                  ## cleaning up the virtualenv
 	rm -rf .venv
 
 
+reset:                    ## soft-reset the board
+	ampy -p $(PORT) -b $(BAUD_RATE) reset
+
+
 get_flash_info:             ## retrieve the flash information
 	esptool.py --chip $(CHIP) --port $(PORT) flash_id
 
 
 erase_flash:              ## erasing the flash on device
-	esptool.py --chip $(CHIP) --port $(PORT) erase_flash
+	esptool.py --chip $(CHIP) --port $(PORT) --baud $(BAUD_RATE) erase_flash
 
 
 flash:                    ## flashing the device with firmware
@@ -73,32 +80,34 @@ endif
 
 
 monitor:                  ## monitor the devices using serial
-	pyserial-miniterm /dev/ttyUSB0 115200
+	pyserial-miniterm $(PORT) $(BAUD_RATE)
 
 
 get:                      ## retrieve boot code
-	ampy -p /dev/ttyUSB0 -b 115200 get boot.py
+	ampy -p $(PORT) -b $(BAUD_RATE) get boot.py
 
 
 put_libs:                 ## upload libraries
-	ampy -p /dev/ttyUSB0 -b 115200 mkdir --exists-okay lib
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/device.py lib/device.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/device_config.py lib/device_config.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/logger.py lib/logger.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/events.py lib/events.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/wifi.py lib/wifi.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/mqtt.py lib/mqtt.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/ntptime.py lib/ntptime.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/neoled.py lib/neoled.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/sensors.py lib/sensors.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/temp.py lib/temp.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/watchdogtimer.py lib/watchdogtimer.py
-	ampy -p /dev/ttyUSB0 -b 115200 mkdir --exists-okay lib/umqtt
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/umqtt/simple.py lib/umqtt/simple.py
-	ampy -p /dev/ttyUSB0 -b 115200 put lib/umqtt/robust.py lib/umqtt/robust.py
-#	ampy -p /dev/ttyUSB0 -b 115200 put lib/http_timeouts.py lib/http_timeouts.py
-#	ampy -p /dev/ttyUSB0 -b 115200 put lib/http_requests.py lib/http_requests.py
-#	ampy -p /dev/ttyUSB0 -b 115200 put lib/http_webserver.py lib/http_webserver.py
+	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device.py lib/device.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device_config.py lib/device_config.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/logger.py lib/logger.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/status_led.py lib/status_led.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/events.py lib/events.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/wifi.py lib/wifi.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/mqtt.py lib/mqtt.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/ntptime.py lib/ntptime.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/neoled.py lib/neoled.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/sensors.py lib/sensors.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/temp.py lib/temp.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/watchdogtimer.py lib/watchdogtimer.py
+	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib/umqtt
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/umqtt/simple.py lib/umqtt/simple.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/umqtt/robust.py lib/umqtt/robust.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put boot.py boot.py
+#	ampy -p $(PORT) -b $(BAUD_RATE) put lib/http_timeouts.py lib/http_timeouts.py
+#	ampy -p $(PORT) -b $(BAUD_RATE) put lib/http_requests.py lib/http_requests.py
+#	ampy -p $(PORT) -b $(BAUD_RATE) put lib/http_webserver.py lib/http_webserver.py
 
 
 put: $(OBJ_FILES)         ## upload software
@@ -110,5 +119,5 @@ mosquitto:                ## start mosquitto server
 
 
 %.pyc: %.py
-	ampy -p /dev/ttyUSB0 -b 115200 put $< $<
+	ampy -p $(PORT) -b $(BAUD_RATE) put $< $<
 
