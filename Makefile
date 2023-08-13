@@ -54,6 +54,10 @@ reset:                    ## soft-reset the board
 	ampy -p $(PORT) -b $(BAUD_RATE) reset
 
 
+abort:                    ## abort current program
+	./tools/abort.py
+
+
 get_flash_info:             ## retrieve the flash information
 	esptool.py --chip $(CHIP) --port $(PORT) flash_id
 
@@ -87,7 +91,7 @@ get:                      ## retrieve boot code
 	ampy -p $(PORT) -b $(BAUD_RATE) get boot.py
 
 
-put_libs:                 ## upload libraries
+put_libs: abort           ## upload libraries
 	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device.py lib/device.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device_config.py lib/device_config.py
