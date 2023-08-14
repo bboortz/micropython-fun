@@ -49,11 +49,19 @@ CONFIG =	{
 #      {
 #          "sensor_name": "heizkoerper_vorlauf_temp",
 #          "sensor_type": "DS18X20_SENSOR",
+#          "measure_type": "temp",
 #          "sensor_pin": 41
 #      },
       {
           "sensor_name": "raum_temp",
           "sensor_type": "DHT22_SENSOR",
+          "measure_type": "temp",
+          "sensor_pin": 42
+      },
+      {
+          "sensor_name": "raum_humi",
+          "sensor_type": "DHT22_SENSOR",
+          "measure_type": "humi",
           "sensor_pin": 42
       }
   ]

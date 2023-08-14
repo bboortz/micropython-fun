@@ -14,7 +14,7 @@ DEV = "/dev/ttyUSB0"
 BAUD = 115200
 CONTROL_C_CHAR = b'\x03' # ctrl-c
 CONTROL_D_CHAR = b'\x04' # ctrl-d
-NUMBER_WRITES = 30
+NUMBER_WRITES = 50
 
 
 
@@ -29,6 +29,6 @@ i = 0
 while i < NUMBER_WRITES:
     ser.write(CONTROL_C_CHAR)
     i = i+1
-ser.write(CONTROL_D_CHAR)
+#ser.write(CONTROL_D_CHAR)
 ser.close()
 

@@ -91,7 +91,7 @@ get:                      ## retrieve boot code
 	ampy -p $(PORT) -b $(BAUD_RATE) get boot.py
 
 
-put_libs: abort           ## upload libraries
+put_libs:                 ## upload libraries
 	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device.py lib/device.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device_config.py lib/device_config.py
@@ -104,6 +104,7 @@ put_libs: abort           ## upload libraries
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/neoled.py lib/neoled.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/sensors.py lib/sensors.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/temp.py lib/temp.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/humi.py lib/humi.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/watchdogtimer.py lib/watchdogtimer.py
 	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib/umqtt
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/umqtt/simple.py lib/umqtt/simple.py
