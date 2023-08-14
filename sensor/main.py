@@ -106,8 +106,9 @@ def measure(mqtt, counter, sensors, topic):
             sensor = s.get("sensor")
             sensor_res = sensor.measure()
             sensor.init_next_measure()
+            u = sensor.get_unit()
             json_data.update({name: sensor_res})
-            print("Temperature: %3.3f °C" % sensor_res)
+            print("Result: %3.3f %s" % (sensor_res, u))
 
         json_str = json.dumps(json_data)
         print(json_str)
