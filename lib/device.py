@@ -2,7 +2,7 @@ import gc
 import time
 import status_led
 import logger
-from machine import Pin
+import machine
 from watchdogtimer import WatchdogTimer
 from sensors import get_sensors
 import neoled
@@ -21,12 +21,23 @@ class Device:
         self.__counter = counter
         self.__config = config
 
+    def reset_cause_str(self, cause):
+        switch={
+            machine.DEEPSLEEP_RESET:'deepsleep reset',
+            machine.HARD_RESET:'hard reset',
+            machine.SOFT_RESET:'soft reset',
+            machine.PWRON_RESET:'poweron reset',
+            machine.WDT_RESET:'watchdog timer reset'
+        }
+        return switch.get(cause,"Unknown Reset Cause!")
+
     def setup(self):
         print('\n\n')
         print("--------------------- SETUP BOARD: %d ---------------------" % self.__counter)
         time.sleep_ms( self.__config.get("BOOT_WAIT_MS") )
         logger.print_info("** BOARD INFO **")
         logger.board_info()
+        print("reset cause: %s" % self.reset_cause_str( machine.reset_cause() ))
         logger.print_info("** CONFIG **")
         print(self.__config)
 
