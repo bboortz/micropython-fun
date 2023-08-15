@@ -91,6 +91,10 @@ get:                      ## retrieve boot code
 	ampy -p $(PORT) -b $(BAUD_RATE) get boot.py
 
 
+ls:                       ## retrieve boot code
+	ampy -p $(PORT) -b $(BAUD_RATE) ls
+
+
 put_libs:                 ## upload libraries
 	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device.py lib/device.py
