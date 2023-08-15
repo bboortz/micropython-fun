@@ -31,6 +31,13 @@ class Device:
         }
         return switch.get(cause,"Unknown Reset Cause!")
 
+    def deepsleep(self, deepsleep_ms):
+        if deepsleep_ms == None  or  deepsleep_ms <= 0:
+            return
+
+        logger.print_info("Deepsleep for %d seconds ..." % deepsleep_ms)
+        machine.deepsleep(deepsleep_ms)
+
     def setup(self):
         print('\n\n')
         print("--------------------- SETUP BOARD: %d ---------------------" % self.__counter)

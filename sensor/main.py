@@ -36,6 +36,7 @@ MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
 MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
 
 PUBLISH_INTERVAL_MS  = CONFIG.get("PUBLISH_INTERVAL_MS")
+DEEPSLEEP_MS = CONFIG.get("DEEPSLEEP_MS")
 
 
 
@@ -195,6 +196,7 @@ def main():
         wdt.feed()
         time.sleep_ms(PUBLISH_INTERVAL_MS)
         wdt.feed()
+        dev.deepsleep(DEEPSLEEP_MS)
 
     # cleanup
     m.disconnect()
