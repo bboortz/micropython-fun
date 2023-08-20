@@ -24,6 +24,14 @@ class Wifi:
         self.deactivate()
 
 
+    def do_connect(self, host, mac, wifi_ssid, wifi_pass):
+        self.activate()
+        self.set_hostname(host)
+        self.set_mac(mac)
+        self.connect(wifi_ssid, wifi_pass)
+        self.info()
+
+
     def is_connected(self):
         logger.print_cmd('Test WIFI Connection')
         ret = self.__nic.isconnected()

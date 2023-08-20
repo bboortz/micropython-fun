@@ -105,6 +105,7 @@ put_libs:                 ## upload libraries
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/wifi.py lib/wifi.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/mqtt.py lib/mqtt.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/ntptime.py lib/ntptime.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/program_state.py lib/program_state.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/neoled.py lib/neoled.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/sensors.py lib/sensors.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/temp.py lib/temp.py
@@ -117,6 +118,25 @@ put_libs:                 ## upload libraries
 #	ampy -p $(PORT) -b $(BAUD_RATE) put lib/http_timeouts.py lib/http_timeouts.py
 #	ampy -p $(PORT) -b $(BAUD_RATE) put lib/http_requests.py lib/http_requests.py
 #	ampy -p $(PORT) -b $(BAUD_RATE) put lib/http_webserver.py lib/http_webserver.py
+
+
+put_libs_repl:              ## upload repl libraries
+	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib
+	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib/aiorepl
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aiorepl/aiorepl.py lib/aiorepl2.py
+
+
+put_libs_ble:              ## upload ble libraries
+	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib
+	ampy -p $(PORT) -b $(BAUD_RATE) mkdir --exists-okay lib/aioble
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/central.py lib/aioble/central.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/client.py lib/aioble/client.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/core.py lib/aioble/core.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/device.py lib/aioble/device.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/l2cap.py lib/aioble/l2cap.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/peripheral.py lib/aioble/peripheral.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/security.py lib/aioble/security.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/aioble/server.py lib/aioble/server.py
 
 
 put: $(OBJ_FILES)         ## upload software

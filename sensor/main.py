@@ -7,85 +7,32 @@ print("--------------------- RUN PROGRAM ---------------------")
 #
 # import
 # 
-from events import Events
-from config import CONFIG
-from secrets import SECRETS
-import temp
-
 import sys
 import time
+import uasyncio as asyncio
 import ujson as json
+from config import CONFIG
+import temp
 import logger
-from wifi import Wifi
-from wifi import WifiException
-from mqtt import Mqtt
 
 
 
 # 
 # global constants
 #
-MAX_SETUP_ATTEMPTS = 2
-MAX_ERRORS = 10
-MAX_COUNTER = sys.maxsize - 1000
-COUNTER = 0
-ERR_COUNTER = 0
-
-MQTT_BROKER = CONFIG.get("MQTT_BROKER")
-MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
 MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
 
-PUBLISH_INTERVAL_MS  = CONFIG.get("PUBLISH_INTERVAL_MS")
+MEASUREMENT_INTERVAL_MS  = CONFIG.get("MEASUREMENT_INTERVAL_MS")
 DEEPSLEEP_MS = CONFIG.get("DEEPSLEEP_MS")
 
+health_t = None
 
 
 
 #
 # functions
 #
-def setup_wifi(wdt):
-    try:
-        w = Wifi(wdt)
-        w.activate()
-        w.set_hostname(MY_HOST)
-        w.set_mac(MY_MAC)
-        w.connect(SECRETS.get("WIFI_SSID"), SECRETS.get("WIFI_PASS"))
-        w.info()
-    except Exception as e:
-        EVENTS.event("error", "WIFI Setup Failed: %s" % getattr(e, 'message', repr(e)) )
-        raise(e)
-    except WifiException as be:
-        EVENTS.event("error", "WIFI Setup Failed: %s. Deactivating interface." % getattr(be, 'message', repr(be)) )
-        sys.print_exception(be)
-        w.deactivate()
-        raise(be)
-
-    return w
-
-
-def setup_mqtt():
-    try:
-        m = Mqtt(MQTT_CLIENT_NAME, MQTT_BROKER)
-        m.connect()
-    except Exception as e:
-        EVENTS.event("error", "MQTT Setup Failed: %s" % getattr(e, 'message', repr(e)) )
-        raise(e)
-
-    return m
-
-
-def setup_ntptime():
-    import ntptime
-
-    logger.print_info("Local time before synchronization：%s" %str(time.localtime()))
-    ntptime.settime()
-    logger.print_info("Local time after synchronization：%s" %str(time.localtime()))
-
-
 def measure(mqtt, counter, sensors, topic):
-    global ERR_COUNTER
-
     try:
         t = time.localtime()
         datetime = "%4d-%02d-%02dT%02d:%02d:%02d.000Z" % (t[0], t[1], t[2], t[3], t[4], t[5])
@@ -98,8 +45,6 @@ def measure(mqtt, counter, sensors, topic):
             "measure_count": counter, 
             "datetime": datetime,
             "ticks_s": ticks_s,
-#            "vorlauf_temp": temp_vorlauf_res,
-#            "ruecklauf_temp": temp_ruecklauf_res
         }
 
         for s in sensors:
@@ -114,93 +59,75 @@ def measure(mqtt, counter, sensors, topic):
         json_str = json.dumps(json_data)
         print(json_str)
         mqtt.publish(topic, json_str)
-        # mqtt.publish(topic + "-temp", str(temp))
-        # mqtt.publish(topic_begin + "-humi", str(humi))
     except Exception as e:
         EVENTS.event("error", "Measurement failed: %s" % getattr(e, 'message', repr(e)) )
-        ERR_COUNTER += 1
-        if ERR_COUNTER > MAX_ERRORS:
-            EVENTS.event("error", "initiating soft reset because ERR_COUNTER is reaching MAX_ERRORS.")
+        program_state.err_counter += 1
+        if program_state.err_counter > program_state.max_errors:
+            EVENTS.event("error", "initiating soft reset because program_state.err_counter is reaching program_state.max_errors.")
             EVENTS.soft_reset()
 
 
-#
-# program
-#
 
-def main():
-    global COUNTER
-    global ERR_COUNTER
-    global MAX_SETUP_ATTEMPTS
-    global BOOT_WAIT_MS
-    w = None
-    m = None
-    EVENTS.event("info", "program setup runnig ...", COUNTER)
-
-    # loop to setup the board
+#
+# tasks
+#
+async def health_task():
     while True:
-        COUNTER += 1
-        if COUNTER > MAX_SETUP_ATTEMPTS:
-            wait_ms = BOOT_WAIT_MS * COUNTER * COUNTER
-            EVENTS.event("error", "setup has failed MAX_SETUP_ATTEMPTS(%d) times. sleep %d milliseconds. hard reset..." % (MAX_SETUP_ATTEMPTS, wait_ms))
-            time.sleep_ms(wait_ms)
-            EVENTS.hard_reset()
+        wait_ms = MEASUREMENT_INTERVAL_MS * 12
+        await asyncio.sleep_ms(wait_ms)
+
+        if not program_state.is_setup_done():
+            continue
 
         try:
-            wait_ms = BOOT_WAIT_MS
-            time.sleep_ms(wait_ms)
-            w = setup_wifi(wdt)
-            wdt.feed()
-            m = setup_mqtt()
-            wdt.feed()
-            setup_ntptime()
-            wdt.feed()
-            break
-
-        except WifiException as be:
-            wait_ms = BOOT_WAIT_MS * COUNTER * COUNTER
-            EVENTS.event("error", "setup failed. sleep %d milliseconds. retry..." % wait_ms)
-            time.sleep_ms(wait_ms)
+            program_state.mqtt.ping()
+            EVENTS.event("info", "HEALTHY", program_state.counter)
         except Exception as e:
-            EVENTS.event("error", "setup failed", COUNTER)
-            sys.print_exception(e)
-            wait_ms = BOOT_WAIT_MS * COUNTER * COUNTER
-            EVENTS.event("error", "setup failed. sleep %d milliseconds. retry..." % wait_ms)
-            time.sleep_ms(wait_ms)
+            logger.print_error("UNHEALTHY")
+            program_state.mqtt.disconnect()
+            program_state.wifi.disconnect()
+            program_state.mqtt = None
+            program_state.wifi = None
+            program_state.setup_undone()
 
 
-    COUNTER = 0
-    EVENTS.set_mqtt(m, COUNTER)
-    EVENTS.event("info", "program setup done", COUNTER)
-    led.on()
-    time.sleep_ms(BOOT_WAIT_MS)
-    led.off()
-    wdt.feed()
-
+async def measure_task():
     # loop for measuring and publishing data
     while True:
-        if COUNTER > MAX_COUNTER:
-            EVENTS.event("error", "initiating soft reset because COUNTER is reaching MAX_COUNTER.")
+        program_state.wdt.feed()
+        await asyncio.sleep_ms(MEASUREMENT_INTERVAL_MS)
+        program_state.wdt.feed()
+
+        if not program_state.is_setup_done():
+            continue
+
+        if program_state.counter > program_state.max_counter:
+            EVENTS.event("error", "initiating soft reset because program_state.counter is reaching program_state.max_counter.")
             EVENTS.soft_reset()
 
-        print("----------- MEASURE AND PUBLISH: %d -----------" % COUNTER)
-        led.on()
+        print("----------- MEASURE AND PUBLISH: %d -----------" % program_state.counter)
+        program_state.led.on()
 
-        if len(sensors) == 0:
+        if len(program_state.sensors) == 0:
             logger.print_info("no sensors configured.")
         else:
-            measure(m, COUNTER, sensors, MQTT_TOPIC)
+            measure(program_state.mqtt, program_state.counter, program_state.sensors, MQTT_TOPIC)
 
-        led.off()
-        COUNTER += 1
-        wdt.feed()
-        time.sleep_ms(PUBLISH_INTERVAL_MS)
-        wdt.feed()
-        dev.deepsleep(DEEPSLEEP_MS)
+        program_state.led.off()
+        program_state.counter += 1
 
-    # cleanup
-    m.disconnect()
-    w.disconnect()
+
+async def main():
+    global health_t
+
+    EVENTS.event("info", "main() function running ...", program_state.counter)
+    await asyncio.sleep_ms(BOOT_WAIT_MS)
+
+    EVENTS.event("info", "Starting tasks ...", program_state.counter)
+    health_t = asyncio.create_task(health_task())
+    measure_t = asyncio.create_task(measure_task())
+    await asyncio.gather(health_t, measure_t)
+
 
 
 while True:
@@ -208,12 +135,15 @@ while True:
         # uncomment for testing the exception handling
         #from events import EventsException
         #raise EventsException("aaa")
-        main()
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        EVENTS.event("error", "Ctrl-C", program_state.counter)
+        health_t.cancel()
+        health_t = None
     except Exception as e:
-        EVENTS.event("error", "Failed in main() function because of an Exception!", COUNTER)
+        EVENTS.event("error", "Failed in main() function because of an Exception!", program_state.counter)
         sys.print_exception(e)
         EVENTS.soft_reset()
     except:
-        EVENTS.event("error", "Failed in main() function because of an *UNCATCHED* Exception!", COUNTER)
+        EVENTS.event("error", "Failed in main() function because of an *UNCATCHED* Exception!", program_state.counter)
         EVENTS.soft_reset()
-

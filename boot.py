@@ -8,19 +8,26 @@ print("--------------------- BOOT BOARD ---------------------")
 # imports
 #
 import sys
-import gc
 import time
+import uasyncio as asyncio
 
 from events import Events
 from config import CONFIG
+from secrets import SECRETS
+from wifi import Wifi
+from wifi import WifiException
+from mqtt import Mqtt
 import device
 import logger
+from program_state import ProgramState
 
 
 
 # 
 # global constants
 #
+LIB_VERSION = 2
+
 BOOT_MAX_SETUP_ATTEMPTS = 2
 BOOT_COUNTER = 0
 BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
@@ -31,6 +38,8 @@ MY_HOST = CONFIG.get("MY_HOST")
 MY_STAGE = CONFIG.get("MY_STAGE")
 
 MQTT_TOPIC_EVENTS = CONFIG.get("MQTT_TOPIC_EVENTS")
+MQTT_BROKER = CONFIG.get("MQTT_BROKER")
+MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
 
 EVENTS_FILE = CONFIG.get("EVENTS_FILE")
 EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
@@ -40,23 +49,110 @@ EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
 # 
 # global variables
 #
-dev = None 
-led = None
-sensors = None
-wdt = None
+program_state = None
+
+
+
+#
+# functions
+# 
+def setup_wifi(wdt):
+    global program_state
+    try:
+        wifi_ssid = SECRETS.get("WIFI_SSID")
+        wifi_pass = SECRETS.get("WIFI_PASS")
+        program_state.wifi = Wifi(wdt)
+        program_state.wifi.do_connect(MY_HOST, MY_MAC, wifi_ssid, wifi_pass)
+    except Exception as e:
+        EVENTS.event("error", "WIFI Setup Failed: %s" % getattr(e, 'message', repr(e)) )
+        raise(e)
+    except WifiException as be:
+        EVENTS.event("error", "WIFI Setup Failed: %s. Deactivating interface." % getattr(be, 'message', repr(be)) )
+        sys.print_exception(be)
+        program_state.wifi.deactivate()
+        raise(be)
+
+
+def setup_mqtt():
+    try:
+        program_state.mqtt = Mqtt(MQTT_CLIENT_NAME, MQTT_BROKER)
+        program_state.mqtt.connect()
+    except Exception as e:
+        EVENTS.event("error", "MQTT Setup Failed: %s" % getattr(e, 'message', repr(e)) )
+        raise(e)
+
+
+def setup_ntptime():
+    import ntptime
+
+    logger.print_info("Local time before synchronization：%s" %str(time.localtime()))
+    ntptime.settime()
+    logger.print_info("Local time after synchronization：%s" %str(time.localtime()))
+
+
+
+#
+# tasks
+#
+async def control_task():
+    while True:
+        EVENTS.event("info", "CONTROL", program_state.counter)
+        await asyncio.sleep_ms(1000)
+
+
+async def setup_task():
+    EVENTS.event("info", "program setup runnig ...", program_state.counter)
+
+    while True:
+        program_state.wdt.feed()
+        wait_ms = BOOT_WAIT_MS
+        await asyncio.sleep_ms(wait_ms)
+        program_state.wdt.feed()
+
+        if program_state.is_setup_done():
+            continue
+
+        program_state.setup_counter += 1
+        if program_state.setup_counter > program_state.max_setup_attempts:
+            wait_ms = BOOT_WAIT_MS * program_state.setup_counter * program_state.setup_counter
+            EVENTS.event("error", "setup has failed program_state.max_setup_attempts(%d) times. sleep %d milliseconds. hard reset..." % (program_state.max_setup_attempts, wait_ms))
+            await asyncio.sleep_ms(wait_ms)
+            EVENTS.hard_reset()
+
+        try:
+            program_state.led.on()
+            setup_wifi(program_state.wdt)
+            program_state.wdt.feed()
+            setup_mqtt()
+            EVENTS.set_mqtt(program_state.mqtt, program_state.counter)
+            program_state.wdt.feed()
+            setup_ntptime()
+            program_state.wdt.feed()
+            program_state.led.off()
+            program_state.wdt.feed()
+            program_state.setup_done()
+            continue
+
+        except WifiException as be:
+            wait_ms = BOOT_WAIT_MS * program_state.counter * program_state.counter
+            EVENTS.event("error", "setup failed. sleep %d milliseconds. retry..." % wait_ms)
+            await asyncio.sleep_ms(wait_ms)
+        except Exception as e:
+            EVENTS.event("error", "setup failed", program_state.counter)
+            sys.print_exception(e)
+            wait_ms = BOOT_WAIT_MS * program_state.counter * program_state.counter
+            EVENTS.event("error", "setup failed. sleep %d milliseconds. retry..." % wait_ms)
+            await asyncio.sleep_ms(wait_ms)
 
 
 
 #
 # boot sequence
 # 
-def boot_setup():
+async def boot_setup():
     global BOOT_COUNTER
     global BOOT_WAIT_MS
-    global dev
-    global led
-    global sensors
-    global wdt
+    global program_state
     EVENTS.event("info", "boot setup running ...", BOOT_COUNTER)
 
     # loop to setup the board
@@ -73,7 +169,13 @@ def boot_setup():
             time.sleep_ms(wait_ms)
             dev = device.Device(BOOT_COUNTER, CONFIG)
             led, sensors, wdt = dev.setup()
-            wdt.feed()
+            program_state = ProgramState(dev, led, sensors, wdt)
+            program_state.wdt.feed()
+            setup_t = asyncio.create_task(setup_task())
+            # wcontrol_t = asyncio.create_task(control_task())
+
+            while not program_state.is_setup_done():
+                await asyncio.sleep_ms(wait_ms)
             break
 
         except Exception as e:
@@ -92,7 +194,7 @@ try:
     # uncomment for testing the exception handling
     #from events import EventsException
     #raise EventsException("aaa")
-    boot_setup()
+    asyncio.run(boot_setup())
 except Exception as e:
     EVENTS.event("error", "Failed in boot_setup() function because of an Exception!", BOOT_COUNTER)
     sys.print_exception(e)
