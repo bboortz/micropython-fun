@@ -28,6 +28,7 @@ from program_state import ProgramState
 #
 LIB_VERSION = 2
 
+# TODO: here or in lib/program_state.py
 BOOT_MAX_SETUP_ATTEMPTS = 2
 BOOT_COUNTER = 0
 BOOT_WAIT_MS = CONFIG.get("BOOT_WAIT_MS")
@@ -37,6 +38,7 @@ MY_MAC = CONFIG.get("MY_MAC")
 MY_HOST = CONFIG.get("MY_HOST")
 MY_STAGE = CONFIG.get("MY_STAGE")
 
+MQTT_TOPIC_STATES = CONFIG.get("MQTT_TOPIC_STATES")
 MQTT_TOPIC_EVENTS = CONFIG.get("MQTT_TOPIC_EVENTS")
 MQTT_BROKER = CONFIG.get("MQTT_BROKER")
 MQTT_CLIENT_NAME = CONFIG.get("MQTT_CLIENT_NAME")
@@ -77,6 +79,7 @@ def setup_mqtt():
     try:
         program_state.mqtt = Mqtt(MQTT_CLIENT_NAME, MQTT_BROKER)
         program_state.mqtt.connect()
+        EVENTS.set_mqtt(program_state.mqtt, program_state.counter)
     except Exception as e:
         EVENTS.event("error", "MQTT Setup Failed: %s" % getattr(e, 'message', repr(e)) )
         raise(e)
@@ -124,13 +127,12 @@ async def setup_task():
             setup_wifi(program_state.wdt)
             program_state.wdt.feed()
             setup_mqtt()
-            EVENTS.set_mqtt(program_state.mqtt, program_state.counter)
             program_state.wdt.feed()
             setup_ntptime()
             program_state.wdt.feed()
             program_state.led.off()
             program_state.wdt.feed()
-            program_state.setup_done()
+            program_state.set_state_setup_done()
             continue
 
         except WifiException as be:
@@ -169,7 +171,7 @@ async def boot_setup():
             time.sleep_ms(wait_ms)
             dev = device.Device(BOOT_COUNTER, CONFIG)
             led, sensors, wdt = dev.setup()
-            program_state = ProgramState(dev, led, sensors, wdt)
+            program_state = ProgramState(MY_STAGE, MY_LOCATION, MY_HOST, dev, led, sensors, wdt, MQTT_TOPIC_STATES)
             program_state.wdt.feed()
             setup_t = asyncio.create_task(setup_task())
             # wcontrol_t = asyncio.create_task(control_task())

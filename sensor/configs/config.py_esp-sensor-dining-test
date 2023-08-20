@@ -34,8 +34,9 @@ CONFIG =	{
   # mqtt
   "MQTT_BROKER": "mosquitto.pub-a.devara.world",
   "MQTT_CLIENT_NAME": MY_HOST,
-  "MQTT_TOPIC": "sensornet/measurements",
+  "MQTT_TOPIC_STATES": "sensornet/states",
   "MQTT_TOPIC_EVENTS": "sensornet/events",
+  "MQTT_TOPIC_MEASUREMENTS": "sensornet/measurements",
 
   # intervals & timeouts
   "BOOT_WAIT_MS": 1000,

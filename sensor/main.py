@@ -20,7 +20,7 @@ import logger
 # 
 # global constants
 #
-MQTT_TOPIC = CONFIG.get("MQTT_TOPIC")
+MQTT_TOPIC_MEASUREMENTS = CONFIG.get("MQTT_TOPIC_MEASUREMENTS")
 
 MEASUREMENT_INTERVAL_MS  = CONFIG.get("MEASUREMENT_INTERVAL_MS")
 DEEPSLEEP_MS = CONFIG.get("DEEPSLEEP_MS")
@@ -81,14 +81,14 @@ async def health_task():
 
         try:
             program_state.mqtt.ping()
-            EVENTS.event("info", "HEALTHY", program_state.counter)
+            program_state.set_state_healthy()
         except Exception as e:
             logger.print_error("UNHEALTHY")
+            program_state.set_state_unhealthy()
             program_state.mqtt.disconnect()
             program_state.wifi.disconnect()
             program_state.mqtt = None
             program_state.wifi = None
-            program_state.setup_undone()
 
 
 async def measure_task():
@@ -111,7 +111,7 @@ async def measure_task():
         if len(program_state.sensors) == 0:
             logger.print_info("no sensors configured.")
         else:
-            measure(program_state.mqtt, program_state.counter, program_state.sensors, MQTT_TOPIC)
+            measure(program_state.mqtt, program_state.counter, program_state.sensors, MQTT_TOPIC_MEASUREMENTS)
 
         program_state.led.off()
         program_state.counter += 1

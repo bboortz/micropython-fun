@@ -5,7 +5,7 @@ from device_config import MACHINE_ID_QSUM
 
 
 MY_STAGE = "test"
-MY_LOCATION = "shed"
+MY_LOCATION = "dining"
 MY_HOST = "esp-" + MY_LOCATION + "-" + str( MACHINE_ID_QSUM )
 
 MY_STAGE_HEX = "{0:02x}".format(ord( MY_STAGE[0] ))
@@ -34,8 +34,9 @@ CONFIG =	{
   # mqtt
   "MQTT_BROKER": "mosquitto.pub-a.devara.world",
   "MQTT_CLIENT_NAME": MY_HOST,
-  "MQTT_TOPIC": "sensornet/measurements",
+  "MQTT_TOPIC_STATES": "sensornet/states",
   "MQTT_TOPIC_EVENTS": "sensornet/events",
+  "MQTT_TOPIC_MEASUREMENTS": "sensornet/measurements",
 
   # intervals & timeouts
   "BOOT_WAIT_MS": 1000,
@@ -44,12 +45,12 @@ CONFIG =	{
 
   "SENSORS":
   [
-#      {
-#          "sensor_name": "heizkoerper_vorlauf_temp",
-#          "sensor_type": "DS18X20_SENSOR",
-#          "measure_type": "temp",
-#          "sensor_pin": 41
-#      },
+      {
+          "sensor_name": "heizkoerper_vorlauf_temp",
+          "sensor_type": "DS18X20_SENSOR",
+          "measure_type": "temp",
+          "sensor_pin": 41
+      },
       {
           "sensor_name": "raum_temp",
           "sensor_type": "DHT22_SENSOR",
