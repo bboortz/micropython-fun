@@ -73,9 +73,12 @@ def measure(mqtt, counter, sensors, topic):
 #
 async def health_task():
     while True:
-        wait_ms = MEASUREMENT_INTERVAL_MS * 12
+        wait_ms = MEASUREMENT_INTERVAL_MS * 5
         await asyncio.sleep_ms(wait_ms)
 
+        if program_state.is_stopped():
+            EVENTS.event("info", "task health_task stopped!")
+            break
         if not program_state.is_setup_done():
             continue
 
@@ -98,6 +101,9 @@ async def measure_task():
         await asyncio.sleep_ms(MEASUREMENT_INTERVAL_MS)
         program_state.wdt.feed()
 
+        if program_state.is_stopped():
+            EVENTS.event("info", "task measure_task stopped!")
+            break
         if not program_state.is_setup_done():
             continue
 
@@ -124,8 +130,8 @@ async def main():
     await asyncio.sleep_ms(BOOT_WAIT_MS)
 
     EVENTS.event("info", "Starting tasks ...", program_state.counter)
-    health_t = asyncio.create_task(health_task())
-    measure_t = asyncio.create_task(measure_task())
+    health_t = tasks.create_task("health_task", health_task())
+    measure_t = tasks.create_task("measure_task", measure_task())
     await asyncio.gather(health_t, measure_t)
 
 

@@ -19,7 +19,7 @@ CONFIG =	{
   "EVENTS_FILE": "events.csv",
 
   # pins
-    # pins
+  "BOOT_BUTTON": 0,
   "STATUS_LED":  {
           "TYPE": "NEOLED",
           "PIN": 18

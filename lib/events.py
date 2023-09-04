@@ -54,13 +54,13 @@ class Events:
         if self.mqtt != None:
             # log to mqtt
             self.mqtt.publish(self.topic, json_str)
-        else:
-            # log to file
-            f = open(self.filename, 'a')
-            f.write('\n')
-            f.write(json_str)
-            f.write('\n')
-            f.close()
+        #else:
+        #    # log to file
+        #    f = open(self.filename, 'a')
+        #    f.write('\n')
+        #    f.write(json_str)
+        #    f.write('\n')
+        #    f.close()
 
     def soft_reset(self):
         self.event("cmd", "soft reset")

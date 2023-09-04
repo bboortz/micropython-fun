@@ -101,6 +101,8 @@ put_libs:                 ## upload libraries
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/device_config.py lib/device_config.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/logger.py lib/logger.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/status_led.py lib/status_led.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/button.py lib/button.py
+	ampy -p $(PORT) -b $(BAUD_RATE) put lib/tasks.py lib/tasks.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/events.py lib/events.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/wifi.py lib/wifi.py
 	ampy -p $(PORT) -b $(BAUD_RATE) put lib/mqtt.py lib/mqtt.py

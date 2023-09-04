@@ -1,6 +1,7 @@
 import gc
 import time
 import status_led
+import button
 import logger
 import machine
 from watchdogtimer import WatchdogTimer
@@ -20,6 +21,10 @@ class Device:
     def __init__(self, counter, config):
         self.__counter = counter
         self.__config = config
+        self.status_led = None
+        self.boot_button = None
+        self.sensors = None
+        self.wdt = None
 
     def reset_cause_str(self, cause):
         switch={
@@ -38,7 +43,7 @@ class Device:
         logger.print_info("Deepsleep for %d seconds ..." % deepsleep_ms)
         machine.deepsleep(deepsleep_ms)
 
-    def setup(self):
+    def setup(self, callback_boot_button=button.callback_button):
         print('\n\n')
         print("--------------------- SETUP BOARD: %d ---------------------" % self.__counter)
         time.sleep_ms( self.__config.get("BOOT_WAIT_MS") )
@@ -58,18 +63,22 @@ class Device:
         logger.print_info('GC configured!')
 
         # setup pins
-        led = status_led.StatusLed(self.__config)
-        led.on()
+        self.status_led = status_led.StatusLed(self.__config)
+        self.status_led.on()
         logger.print_info('Status LED configured!')
 
+        boot_button_no = self.__config.get("BOOT_BUTTON")
+        self.boot_button = button.Button(boot_button_no)
+        self.boot_button.irq(callback=callback_boot_button)
+        logger.print_info('Boot Button configured!')
+
         # sensors
-        sensors = get_sensors(self.__config)
+        self.sensors = get_sensors(self.__config)
         logger.print_info('Sensors configured!')
 
         # setup watchdogtimer
-        wdt = WatchdogTimer(self.__config.get("WDT_TIMEOUT_MS"))
+        self.wdt = WatchdogTimer(self.__config.get("WDT_TIMEOUT_MS"))
         logger.print_info('Watchdog Timer configured!')
 
-        led.off()
-        return led, sensors, wdt
+        self.status_led.off()
 

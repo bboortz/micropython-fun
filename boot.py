@@ -19,6 +19,7 @@ from wifi import WifiException
 from mqtt import Mqtt
 import device
 import logger
+from tasks import Tasks
 from program_state import ProgramState
 
 
@@ -52,6 +53,7 @@ EVENTS = Events(EVENTS_FILE, MY_STAGE, MY_LOCATION, MY_HOST, MQTT_TOPIC_EVENTS)
 # global variables
 #
 program_state = None
+tasks = None
 
 
 
@@ -93,14 +95,22 @@ def setup_ntptime():
     logger.print_info("Local time after synchronization：%s" %str(time.localtime()))
 
 
+def callback_stop(p):
+    print('#### pin change', p)
+    # tasks.cancel_all_tasks()
+    program_state.set_state_stopped()
+
+
 
 #
 # tasks
 #
 async def control_task():
     while True:
-        EVENTS.event("info", "CONTROL", program_state.counter)
-        await asyncio.sleep_ms(1000)
+        if program_state.is_stopped():
+            EVENTS.event("info", "WDT from control_task", program_state.counter)
+            program_state.wdt.feed()
+        await asyncio.sleep_ms(5000)
 
 
 async def setup_task():
@@ -112,6 +122,9 @@ async def setup_task():
         await asyncio.sleep_ms(wait_ms)
         program_state.wdt.feed()
 
+        if program_state.is_stopped():
+            EVENTS.event("info", "task setup_task stopped!")
+            break
         if program_state.is_setup_done():
             continue
 
@@ -155,6 +168,7 @@ async def boot_setup():
     global BOOT_COUNTER
     global BOOT_WAIT_MS
     global program_state
+    global tasks
     EVENTS.event("info", "boot setup running ...", BOOT_COUNTER)
 
     # loop to setup the board
@@ -170,11 +184,12 @@ async def boot_setup():
             wait_ms = BOOT_WAIT_MS
             time.sleep_ms(wait_ms)
             dev = device.Device(BOOT_COUNTER, CONFIG)
-            led, sensors, wdt = dev.setup()
-            program_state = ProgramState(MY_STAGE, MY_LOCATION, MY_HOST, dev, led, sensors, wdt, MQTT_TOPIC_STATES)
+            dev.setup(callback_boot_button=callback_stop)
+            program_state = ProgramState(MY_STAGE, MY_LOCATION, MY_HOST, dev, MQTT_TOPIC_STATES)
             program_state.wdt.feed()
-            setup_t = asyncio.create_task(setup_task())
-            # wcontrol_t = asyncio.create_task(control_task())
+            tasks = Tasks()
+            tasks.create_task("setup_task", setup_task())
+            tasks.create_task("control_task", control_task())
 
             while not program_state.is_setup_done():
                 await asyncio.sleep_ms(wait_ms)

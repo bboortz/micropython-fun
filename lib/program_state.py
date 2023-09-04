@@ -13,6 +13,7 @@ MAX_SETUP_ATTEMPTS = 2
 MAX_ERRORS = 10
 MAX_COUNTER = sys.maxsize - 1000
 STATE_UNKNOWN = 0
+STATE_STOPPED = 1
 STATE_IN_SETUP = 100
 STATE_SETUP_DONE = 150
 STATE_HEALTHY = 200
@@ -31,7 +32,7 @@ class ProgramStateException(BaseException):
 
 class ProgramState:
 
-    def __init__(self, stage, location, host, dev, led, sensors, wdt, mqtt_topic_states):
+    def __init__(self, stage, location, host, dev, mqtt_topic_states):
         self.setup_counter = 0
         self.state = STATE_IN_SETUP
         self._setup_done = False
@@ -45,12 +46,15 @@ class ProgramState:
         self.location = location
         self.host = host
         self.dev = dev
-        self.led = led
-        self.sensors = sensors
-        self.wdt = wdt
+        self.led = dev.status_led
+        self.sensors = dev.sensors
+        self.wdt = dev.wdt
         self.wifi = None
         self.mqtt = None
         self.mqtt_topic_states = mqtt_topic_states
+
+    def is_stopped(self):
+        return (self.state == STATE_STOPPED)
 
     def is_setup_done(self):
         return self._setup_done
@@ -74,10 +78,16 @@ class ProgramState:
         self.send_state_via_mqtt(self.state)
 
     def set_state_setup_done(self):
-        logger.print_info("** STATE_SETUP_DONE**")
+        logger.print_info("** STATE_SETUP_DONE **")
         self.state = STATE_SETUP_DONE
         self.send_state_via_mqtt(self.state)
         self.setup_done()
+
+    def set_state_stopped(self):
+        logger.print_info("** STATE_STOPPED **")
+        self.state = STATE_STOPPED
+        self.send_state_via_mqtt(self.state)
+        self.setup_undone()
 
     def set_state_healthy(self):
         logger.print_info("** STATE_HEALTY **")
