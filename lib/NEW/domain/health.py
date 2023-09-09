@@ -32,7 +32,7 @@ class HealthTask(Task):
         self.LOG.print_info("task started!")
 
         while True:
-            await asyncio.sleep( Config.get("SETUP_INTERVAL_MS") / 1000 )
+            await asyncio.sleep( Config.get("HEALTH_INTERVAL_MS") / 1000 )
             if not self.state.is_running():
                 self.LOG.print_info("everything stopped! exiting task now!")
                 break

@@ -38,10 +38,11 @@ class SetupTask(Task):
                 break
 
             if self.state.is_setup_done():
-                self.LOG.print_info("setup is already done!")
+                self.LOG.print_debug("setup is already done!")
                 continue
 
             self.state.to_in_setup()
             self.mqtt.connect()
             self.state.to_setup_done()
-            self.LOG.print_info("setup is done!")
+            self.LOG.print_debug("setup is done!")
+

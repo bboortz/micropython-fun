@@ -3,6 +3,7 @@
 import sys
 import asyncio
 
+from core.config import Config
 from core.generic import GenericException
 from domain.app import App
 from domain.setup import SetupTask
@@ -16,6 +17,7 @@ def main():
     while True:
         try:
             app = App()
+            Config.set("SETUP_INTERVAL_MS", 1)
             app.load_config('config.json')
             mqtt = PahoMqtt(task_name = "main")
             app.set_messaging(mqtt)
