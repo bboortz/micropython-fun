@@ -73,6 +73,10 @@ class State(GenericClass):
         return (self.state == STATE_HEALTHY)
 
 
+    def is_unhealthy(self):
+        return (self.state == STATE_UNHEALTHY)
+
+
     def is_in_setup(self):
         return (self.state == STATE_IN_SETUP)
 

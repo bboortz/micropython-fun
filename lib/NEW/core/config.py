@@ -18,6 +18,7 @@ class ConfigException(GenericException):
 
 class Config:
     host = str(uuid.uuid4()).split("-")[0]
+    topic_prefix = "sensornet"
     __default_conf = {
         "STAGE": "dev",
         "LOCATION": "unknown",
@@ -25,11 +26,17 @@ class Config:
         "LOG_DEBUG": False,
         "BOOT_WAIT_MS": 1000,
         "SETUP_INTERVAL_MS": 3000,
+        "SETUP_MAX_ATTEMPTS": 3,
         "HEALTH_INTERVAL_MS": 5000,
+        "HEALTHY_AFTER_POSITIVE_CHECKS": 2,
+        "UNHEALTHY_AFTER_NEGATIVE_CHECKS": 2,
         "MQTT_BROKER": "localhost",
         "MQTT_PORT": 1883,
         "MQTT_CLIENT_ID": host,
-        "MQTT_KEEPALIVE": 5
+        "MQTT_KEEPALIVE": 5,
+        "MQTT_ALIVE_TOPIC": topic_prefix + "/mqtt/alive",
+        "MQTT_MAX_CONNECT_ATTEMPTS": 3,
+        "MQTT_CONNECT_TIMEOUT": 3
     }
     __conf = __default_conf
     LOG = Logger("core.config.Config", "core")
