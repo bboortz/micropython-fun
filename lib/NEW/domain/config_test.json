@@ -1,0 +1,5 @@
+{
+  "STAGE": "test",
+  "BOOT_WAIT_MS": 0.001,
+  "WDT_TIMEOUT_MS": 5000
+}
