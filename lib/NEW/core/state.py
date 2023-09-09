@@ -48,18 +48,6 @@ class State(GenericClass):
         super().__init__(task)
 
 
-    def is_running(self):
-        return (self.state != STATE_STOPPED)
-
-
-    def is_healthy(self):
-        return (self.state == STATE_HEALTHY)
-
-
-    def is_setup_done(self):
-        return self.__setup_done
-
-
     def setup_done(self):
         self.__setup_done = True
         self.setup_counter = 0
@@ -67,6 +55,30 @@ class State(GenericClass):
 
     def setup_undone(self):
         self.__setup_done = False
+
+
+    def is_init(self):
+        return (self.state == STATE_INIT)
+
+
+    def is_running(self):
+        return (self.state != STATE_STOPPED)
+
+
+    def is_stopped(self):
+        return (self.state == STATE_STOPPED)
+
+
+    def is_healthy(self):
+        return (self.state == STATE_HEALTHY)
+
+
+    def is_in_setup(self):
+        return (self.state == STATE_IN_SETUP)
+
+
+    def is_setup_done(self):
+        return self.__setup_done
 
 
     def set_state(self, state: int):

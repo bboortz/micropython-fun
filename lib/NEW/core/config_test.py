@@ -2,7 +2,6 @@
 import pytest
 import asyncio
 
-from core.core import Core
 from core.config import Config, ConfigException
 
 
@@ -27,6 +26,5 @@ def test_load_config():
 
 
 def test_attr_not_found():
-    c = Core()
     with pytest.raises(ConfigException):
         attr = Config.get("UNKNOWN_ATTR")

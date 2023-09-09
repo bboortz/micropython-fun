@@ -22,7 +22,9 @@ class Config:
         "STAGE": "dev",
         "LOCATION": "unknown",
         "HOST": host,
+        "LOG_DEBUG": False,
         "BOOT_WAIT_MS": 1000,
+        "SETUP_INTERVAL_MS": 3000,
         "HEALTH_INTERVAL_MS": 5000,
         "MQTT_BROKER": "localhost",
         "MQTT_PORT": 1883,
@@ -30,7 +32,7 @@ class Config:
         "MQTT_KEEPALIVE": 5
     }
     __conf = __default_conf
-    LOG = Logger("core.config.Config", "main")
+    LOG = Logger("core.config.Config", "core")
 
 
     @staticmethod

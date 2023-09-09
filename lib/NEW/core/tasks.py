@@ -25,7 +25,7 @@ class Task(GenericClass, metaclass=abc.ABCMeta):
 
     def __init__(self, task_name = "main"):
         super().__init__(task_name)
-        self.LOG.print_info("Task created!")
+        self.LOG.print_debug("Task created!")
 
 
     def __str__(self):
@@ -40,9 +40,9 @@ class Task(GenericClass, metaclass=abc.ABCMeta):
 
 class Tasks(GenericClass):
 
-    def __init__(self, task = "main"):
+    def __init__(self, task_name = "core"):
         self.__tasks_list = []
-        super().__init__(task)
+        super().__init__(task_name)
 
 
     def get_task_list(self):
@@ -51,7 +51,7 @@ class Tasks(GenericClass):
 
     def add_task(self, task):
         self.__tasks_list.append(task)
-        self.LOG.print_info("Task added: %s" % task)
+        self.LOG.print_debug("Task added: %s" % task)
         return task
 
 

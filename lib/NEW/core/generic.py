@@ -24,6 +24,7 @@ class GenericException(Exception):
     def print(self):
         #print(self)
         print(traceback.format_exc())
+#        sys.print_exception(e)
 
 
 
