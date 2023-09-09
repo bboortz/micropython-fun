@@ -11,7 +11,7 @@ class Logger():
 
 
     def print_generic(self, lvl, task, component, msg):
-        print('-{} {} [{}] {}'.format(lvl, task, component, msg))
+        print('-{0: <3} {1: <15} [{2: <30}] {3}'.format(lvl, task, component, msg))
 
 
     def print_cmd(self, msg):

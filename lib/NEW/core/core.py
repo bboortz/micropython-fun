@@ -7,6 +7,7 @@ except:
 from core.generic import GenericClass, GenericException
 from core.config import Config
 from core.tasks import Tasks
+from core.state import State
 
 
 
@@ -23,7 +24,7 @@ class CoreException(GenericException):
 class Core(GenericClass):
 
     def __init__(self, task = "main"):
-        self.__run = False
+        self.__state = State()
         self.__tasks = Tasks()
         super().__init__(task)
         self.LOG.print_info("initialized")
@@ -33,8 +34,12 @@ class Core(GenericClass):
         Config.load(filename)
 
 
-    def add_tasks(self, task_name, coro):
-        return self.__tasks.add_task(task_name, coro)
+    def get_state(self):
+        return self.__state.state
+
+
+    def add_task(self, task):
+        return self.__tasks.add_task(task)
 
 
     async def run(self):
@@ -42,6 +47,7 @@ class Core(GenericClass):
         await asyncio.sleep( Config.get("BOOT_WAIT_MS") / 1000 )
         await self.__tasks.gather_all_tasks()
         self.LOG.print_info("end of run() function")
+        self.__state.to_stopped()
 
 
     def raise_core_exception(self, msg, cause):

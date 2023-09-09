@@ -17,11 +17,17 @@ class ConfigException(GenericException):
 
 
 class Config:
+    host = str(uuid.uuid4()).split("-")[0]
     __default_conf = {
         "STAGE": "dev",
         "LOCATION": "unknown",
-        "HOST": str(uuid.uuid4()).split("-")[0],
-        "BOOT_WAIT_MS": 1000
+        "HOST": host,
+        "BOOT_WAIT_MS": 1000,
+        "HEALTH_INTERVAL_MS": 5000,
+        "MQTT_BROKER": "localhost",
+        "MQTT_PORT": 1883,
+        "MQTT_CLIENT_ID": host,
+        "MQTT_KEEPALIVE": 5
     }
     __conf = __default_conf
     LOG = Logger("core.config.Config", "main")

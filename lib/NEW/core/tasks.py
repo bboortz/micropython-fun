@@ -1,5 +1,6 @@
 
 import time
+import abc
 try:
     import uasyncio as asyncio
 except:
@@ -20,12 +21,20 @@ class TaskException(GenericException):
 
 
 
+class Task(GenericClass, metaclass=abc.ABCMeta):
 
-class Task:
+    def __init__(self, task_name = "main"):
+        super().__init__(task_name)
+        self.LOG.print_info("Task created!")
 
-    def __init__(self, task_name, asyncio_task):
-        self.task_name = task_name
-        self.asyncio_task = asyncio_task
+
+    def __str__(self):
+        return "Task {}".format(self.task_name)
+
+
+    @abc.abstractmethod
+    def task(self):
+        raise NotImplementedError
 
 
 
@@ -40,12 +49,10 @@ class Tasks(GenericClass):
         return self.__tasks_list
 
 
-    def add_task(self, task_name, coro):
-        asyncio_task = coro
-        t = Task(task_name, asyncio_task)
-        self.__tasks_list.append(t)
-        self.LOG.print_info("Task added: %s" % task_name)
-        return asyncio_task
+    def add_task(self, task):
+        self.__tasks_list.append(task)
+        self.LOG.print_info("Task added: %s" % task)
+        return task
 
 
 #    async def run_all_tasks(self):
@@ -58,7 +65,7 @@ class Tasks(GenericClass):
         self.LOG.print_cmd("Run and gather all tasks")
         coro_dict = []
         for t in self.get_task_list():
-            coro_dict.append(t.asyncio_task)
+            coro_dict.append( t.task() )
         await asyncio.gather(*coro_dict)
 
 

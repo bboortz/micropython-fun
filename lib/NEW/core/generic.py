@@ -29,10 +29,10 @@ class GenericException(Exception):
 
 class GenericClass:
 
-    def __init__(self, task):
-        self.__task = task
+    def __init__(self, task_name):
+        self.task_name = task_name
         self.__fullname = self.fullname(self)
-        self.LOG = Logger(self.__fullname, self.__task)
+        self.LOG = Logger(self.__fullname, self.task_name)
 
 
     def fullname(self, o):
