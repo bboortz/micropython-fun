@@ -26,6 +26,7 @@ class Config:
         "LOG_DEBUG": False,
         "BOOT_WAIT_MS": 1000,
         "SETUP_INTERVAL_MS": 3000,
+        "SETUP_MAX_INITS": 3,
         "SETUP_MAX_ATTEMPTS": 3,
         "HEALTH_INTERVAL_MS": 5000,
         "HEALTHY_AFTER_POSITIVE_CHECKS": 2,

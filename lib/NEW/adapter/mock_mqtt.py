@@ -5,15 +5,22 @@ from core.logger import Logger
 from core.config import Config
 from paho.mqtt.client import Client as MqttClient
 from paho.mqtt.client import MQTT_LOG_DEBUG
-from adapter.mqtt import Mqtt
+from domain.messaging import Messaging
 
 
 #
 # class
 #
-class MockMqtt(Mqtt):
+class Message:
+    def __init__(self, mid):
+        self.mid = mid
+
+
+class MockMqtt(Messaging):
 
     def __init__(self, task_name):
+        self.__mqtt_alive_topic = Config.get("MQTT_ALIVE_TOPIC")
+        self.__on_message_callback = None
         super().__init__(task_name)
         self.LOG.print_info("initialized")
 
@@ -31,11 +38,19 @@ class MockMqtt(Mqtt):
 
 
     def publish(self, topic, msg):
-        self.LOG.print_cmd('Publish data via MQTT topic: {}'.format(topic))
+        self.LOG.print_cmd('Publishing data to MQTT topic: {}'.format(topic))
+        if self.__on_message_callback != None:
+            print("callback")
+            self.__on_message_callback("test-client", "userdata", Message(mid = 1) )
 
 
     def subscribe(self, topic, message_func):
-        self.LOG.print_cmd('Subscribe data vi MQTT')
+        self.LOG.print_cmd('Subscribing data to MQTT topic: {}'.format(topic))
+        self.__on_message_callback = message_func
+
+
+    def send_alive(self):
+        self.publish(self.__mqtt_alive_topic, "ALIVE")
 
 
     def ping(self) -> bool:

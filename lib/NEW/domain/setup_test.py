@@ -18,6 +18,7 @@ def test_create_task():
 def test_run_task():
     app = App()
     Config.set("SETUP_INTERVAL_MS", 1)
+    Config.set("HEALTH_INTERVAL_MS", 1)
     mqtt = MockMqtt("mock_test")
     app.set_messaging(mqtt)
     setup_task = app.add_task( SetupTask(task_name="setup_task", app=app) )

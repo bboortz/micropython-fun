@@ -9,7 +9,7 @@ from core.generic import GenericClass, GenericException
 #
 class MessagingException(GenericException):
     def __init__(self, message, cause):
-        context = "state"
+        context = "domain"
         super().__init__(context, message, cause)
 
 
@@ -37,6 +37,11 @@ class Messaging(GenericClass, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def subscribe(self, topic, message_func):
+        raise NotImplementedError
+
+
+    @abc.abstractmethod
+    def send_alive(self):
         raise NotImplementedError
 
 

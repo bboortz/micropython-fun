@@ -5,6 +5,7 @@ from core.tasks import Task
 from domain.app import App, AppException
 from domain.setup import SetupTask
 from domain.health import HealthTask
+from domain.mqtt_alive import MqttAliveTask
 from domain.control import ControlTask
 from adapter.mock_mqtt import MockMqtt
 from tests.setup_check import SetupCheckTask
@@ -34,13 +35,14 @@ class TestTask(Task):
 def main():
     app = App()
     Config.set("SETUP_INTERVAL_MS", 1)
+    Config.set("HEALTH_INTERVAL_MS", 1)
     app.load_config('config.json')
     mqtt = MockMqtt("mock_test")
     app.set_messaging(mqtt)
-    t1 = app.add_task( TestTask("test_task1", 1, 3))
-    setup_task = app.add_task( SetupTask(task_name="setup_task", app=app) )
-    health_task = app.add_task( HealthTask(task_name="health_task", app=app) )
-    #boot_check_task = app.add_task( BootCheckTask(task_name="boot_check_task", app=app) )
+    app.add_task( SetupTask(task_name="setup_task", app=app) )
+    #app.add_task( SetupCheckTask(task_name="setup_check_task", app=app) )
+    app.add_task( HealthTask(task_name="health_task", app=app) )
+    app.add_task( MqttAliveTask(task_name="mqtt_alive_task", app=app) )
     health_check_task = app.add_task( HealthCheckTask(task_name="health_check_task", app=app) )
     asyncio.run(app.run())
 
