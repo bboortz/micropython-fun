@@ -2,3 +2,5 @@ pip
 esptool
 adafruit-ampy
 pyserial
+pytest
+paho-mqtt

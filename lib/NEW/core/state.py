@@ -41,7 +41,7 @@ class StateException(GenericException):
 
 class State(GenericClass):
 
-    def __init__(self, task = "main"):
+    def __init__(self, task = "core"):
         self.setup_counter = 0
         self.state = STATE_INIT
         self.__setup_done = False
