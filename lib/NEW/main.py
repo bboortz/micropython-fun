@@ -10,7 +10,9 @@ from domain.setup import SetupTask
 from domain.health import HealthTask
 from domain.mqtt_alive import MqttAliveTask
 from domain.control import ControlTask
-from adapter.paho_mqtt import PahoMqtt
+from adapter.internet import Internet
+from adapter.wifi_mock import WifiMock
+from adapter.mqtt_paho import MqttPaho
 
 
 
@@ -21,7 +23,10 @@ def main():
             Config.set("SETUP_INTERVAL_MS", 2000)
             Config.set("HEALTH_INTERVAL_MS", 1000)
             app.load_config('config.json')
-            mqtt = PahoMqtt(task_name = "main")
+            wifi = WifiMock()
+            i = Internet(connection = wifi)
+            mqtt = MqttPaho(task_name = "main")
+            app.set_networking(i)
             app.set_messaging(mqtt)
             setup_task = app.add_task( SetupTask(task_name="setup_task", app=app) )
             health_task = app.add_task( HealthTask(task_name="health_task", app=app) )

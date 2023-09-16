@@ -39,5 +39,5 @@ class HealthCheckTask(Task):
             if self.state.is_healthy():
                 i += 1
                 if i >= MAX_POSITIVE_CHECKS:
-                    self.LOG.print_info("program is healthy!")
+                    self.LOG.print_info("program is healthy! program will be stopped!")
                     self.state.to_stopped()

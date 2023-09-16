@@ -39,5 +39,5 @@ class SetupCheckTask(Task):
             if self.state.is_setup_done():
                 i += 1
                 if i >= MAX_POSITIVE_CHECKS:
-                    self.LOG.print_info("bootstrapping is already done!")
+                    self.LOG.print_info("program is setup! program will be stopped!")
                     self.state.to_stopped()
