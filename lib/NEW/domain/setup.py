@@ -1,5 +1,8 @@
 
-import asyncio
+try:
+    import uasyncio as asyncio
+except:
+    import asyncio
 
 from core.generic import GenericClass
 from core.logger import Logger
@@ -25,6 +28,7 @@ class SetupTask(Task):
     def __init__(self, task_name = "setup_task", app = DEFAULT_APP):
         self.app = app
         self.state = app.get_state()
+        self.network = app.get_networking()
         self.mqtt = app.get_messaging()
         self.init_counter = 0
         self.reset()
@@ -49,6 +53,8 @@ class SetupTask(Task):
 
             if self.init_counter >= Config.get("SETUP_MAX_INITS"):
                 self.LOG.print_error("Unable to init & setup. {} attempts failed. Soft-reset!".format(self.init_counter))
+                # TODO!!!!!!!!!!!!!!!
+                import sys
                 sys.exit(1) # TODO !!!!!!!!!!!!!!!!!!
                 continue
 
@@ -60,7 +66,10 @@ class SetupTask(Task):
 
             try:
                 self.setup_counter += 1
-                self.mqtt.connect()
+                if self.network != None:
+                    self.network.connect()
+                    if self.mqtt != None: 
+                        self.mqtt.connect()
                 self.state.to_setup_done()
                 self.LOG.print_debug("setup is done!")
             except Exception:
@@ -69,6 +78,7 @@ class SetupTask(Task):
 
     def reset(self):
         self.setup_counter = 0
-        self.mqtt.disconnect()
+        if self.mqtt != None:
+            self.mqtt.disconnect()
 
 

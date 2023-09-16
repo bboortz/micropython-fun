@@ -1,5 +1,8 @@
 
-import asyncio
+try:
+    import uasyncio as asyncio
+except:
+    import asyncio
 
 from core.config import Config
 from core.tasks import Task

@@ -26,6 +26,7 @@ class App(GenericClass):
     def __init__(self, task = "domain"):
         self.__state = State()
         self.__tasks = Tasks()
+        self.__networking = None
         self.__messaging = None
         super().__init__(task)
         self.LOG.print_debug("initialized")
@@ -45,6 +46,14 @@ class App(GenericClass):
 
     def add_task(self, task):
         return self.__tasks.add_task(task)
+
+
+    def set_networking(self, networking):
+        self.__networking = networking
+
+
+    def get_networking(self):
+        return self.__networking
 
 
     def set_messaging(self, messaging):

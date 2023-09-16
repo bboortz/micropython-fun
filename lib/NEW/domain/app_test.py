@@ -5,7 +5,9 @@ import asyncio
 from domain.app import App, AppException
 from core.tasks import Task
 from core.state import STATE_INIT, STATE_STOPPED
-from adapter.paho_mqtt import PahoMqtt
+from adapter.internet import Internet
+from adapter.wifi_mock import WifiMock 
+from adapter.mqtt_paho import MqttPaho
 
 app_test_task_var = False
 class AppTestTask(Task):
@@ -55,10 +57,19 @@ def test_run_with_tasks():
     assert app_test_task_var == True
 
 
+def test_set_networking():
+    app = App()
+    assert app.get_networking() == None
+    wifi = WifiMock()
+    i = Internet(connection = wifi)
+    app.set_networking(i)
+    assert app.get_networking() != None
+
+
 def test_set_messaging():
     app = App()
     assert app.get_messaging() == None
-    mqtt = PahoMqtt("test")
+    mqtt = MqttPaho("test")
     app.set_messaging(mqtt)
     assert app.get_messaging() != None
 
