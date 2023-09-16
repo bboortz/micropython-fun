@@ -16,7 +16,7 @@ def on_connect(client, userdata, flags, rc):
 #
 # class
 #
-class PahoMqtt(Messaging):
+class MqttPaho(Messaging):
 
     def __init__(self, task_name):
         self.__client_id = Config.get("MQTT_CLIENT_ID")

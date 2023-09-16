@@ -16,9 +16,9 @@ class Message:
         self.mid = mid
 
 
-class MockMqtt(Messaging):
+class MqttMock(Messaging):
 
-    def __init__(self, task_name):
+    def __init__(self, task_name = "setup_task"):
         self.__mqtt_alive_topic = Config.get("MQTT_ALIVE_TOPIC")
         self.__on_message_callback = None
         super().__init__(task_name)
